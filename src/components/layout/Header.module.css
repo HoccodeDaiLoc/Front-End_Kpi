@@ -1,0 +1,7 @@
+.header{height:58px;background:var(--white);border-bottom:1px solid var(--light);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100}
+.left{display:flex;align-items:center;gap:14px}
+.menuBtn{background:none;border:none;color:var(--mid);display:flex;padding:6px;border-radius:7px;transition:all .15s} .menuBtn:hover{background:var(--light-2);color:var(--dark)}
+.title{font-size:16px;font-weight:700;color:var(--dark)}
+.right{display:flex;align-items:center;gap:8px}
+.notifBtn{position:relative;display:flex;padding:8px;border-radius:8px;color:var(--dark-3);transition:all .15s} .notifBtn:hover{background:var(--light-2)}
+.badge{position:absolute;top:3px;right:3px;width:17px;height:17px;background:var(--danger);color:#fff;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}

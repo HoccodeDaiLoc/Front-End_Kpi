@@ -1,0 +1,13 @@
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:8px;font-weight:600;font-size:14px;transition:all .15s;white-space:nowrap;position:relative;outline:none}
+.btn:focus-visible{box-shadow:0 0 0 3px rgba(26,86,219,.3)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.primary{background:var(--primary);color:#fff} .primary:not(:disabled):hover{background:var(--primary-dark)}
+.secondary{background:var(--light-2);color:var(--dark-3);border:1px solid var(--light)} .secondary:not(:disabled):hover{background:var(--light)}
+.danger{background:var(--danger);color:#fff} .danger:not(:disabled):hover{background:#c01a1a}
+.ghost{background:transparent;color:var(--primary);border:1px solid var(--primary)} .ghost:not(:disabled):hover{background:var(--primary-light)}
+.success{background:var(--secondary);color:#fff} .success:not(:disabled):hover{background:#077a56}
+.sm{padding:6px 14px;font-size:13px;border-radius:7px} .md{padding:9px 18px} .lg{padding:11px 24px;font-size:15px}
+.full{width:100%}
+.icon{display:flex;align-items:center}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:rgba(255,255,255,.9);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}

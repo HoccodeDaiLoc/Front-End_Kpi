@@ -1,0 +1,83 @@
+.dept-tree {
+  &-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 7px 12px 7px 16px;
+    border-bottom: 1px solid var(--surface-3);
+    transition: background 0.15s;
+
+    &:hover {
+      background: var(--surface-2);
+
+      .dept-tree-actions {
+        opacity: 1;
+      }
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &-toggle {
+    width: 20px;
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+
+    &--empty {
+      cursor: default;
+    }
+  }
+
+  &-icon {
+    margin-right: 8px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  &-name {
+    flex: 1;
+    min-width: 0;
+
+    &--root {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    &--branch {
+      font-weight: 600;
+      font-size: 13.5px;
+    }
+
+    &--leaf {
+      font-weight: 400;
+      font-size: 13.5px;
+    }
+  }
+
+  &-code {
+    margin-left: 8px;
+    font-size: 11px;
+    color: var(--text-3);
+    font-weight: 400;
+  }
+
+  &-count {
+    margin-left: 8px;
+    font-size: 11px;
+    color: var(--text-3);
+    font-weight: 400;
+  }
+
+  &-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+}

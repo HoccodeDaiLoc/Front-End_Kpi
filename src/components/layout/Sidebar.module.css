@@ -1,0 +1,21 @@
+.sidebar{display:flex;flex-direction:column;height:100vh;background:var(--dark);width:230px;transition:width .2s ease;flex-shrink:0;position:sticky;top:0;overflow:hidden}
+.collapsed{width:64px}
+.logo{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.logoIcon{width:34px;height:34px;border-radius:9px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.logoText{display:flex;flex-direction:column;line-height:1.1}
+.logoMain{font-size:15px;font-weight:800;color:#fff;letter-spacing:.5px}
+.logoSub{font-size:10px;color:rgba(255,255,255,.45);font-weight:500;letter-spacing:2px;text-transform:uppercase}
+.nav{flex:1;padding:12px 8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;overflow-x:hidden}
+.link{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:8px;color:rgba(255,255,255,.55);transition:all .15s;white-space:nowrap}
+.link:hover{color:#fff;background:rgba(255,255,255,.07)}
+.active{color:#fff!important;background:rgba(26,86,219,.5)!important}
+.linkIcon{display:flex;align-items:center;flex-shrink:0;width:20px}
+.linkLabel{font-size:14px;font-weight:500}
+.bottom{padding:12px 8px;border-top:1px solid rgba(255,255,255,.08)}
+.userCard{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;margin-bottom:6px;background:rgba(255,255,255,.05)}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;text-transform:uppercase}
+.userInfo{min-width:0}
+.userName{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.userRole{font-size:11px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logout{display:flex;align-items:center;gap:8px;width:100%;padding:9px 10px;border:none;background:none;color:rgba(255,255,255,.45);border-radius:8px;font-size:13px;font-weight:500;transition:all .15s;cursor:pointer}
+.logout:hover{color:#fff;background:rgba(224,36,36,.2);color:#f87171}
