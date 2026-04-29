@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Header from '../../components/layout/Header';
 import { getOverview, getTrend } from '../../api/dashboard';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { getScoreColor } from '../../utils/helpers';
-import toast from 'react-hot-toast';
 
+import toast from 'react-hot-toast';
+import { getScoreColor, getScoreLabel } from '../../utils/helpers';
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444'];
 
 export default function ReportsPage() {
@@ -26,11 +26,11 @@ export default function ReportsPage() {
   useEffect(() => { load(); }, [year]);
 
   const distData = overview ? [
-    { name: 'Xuất sắc (≥9)', value: overview.scoreDistribution?.excellent || 0 },
-    { name: 'Tốt (≥7)', value: overview.scoreDistribution?.good || 0 },
-    { name: 'Khá (≥5)', value: overview.scoreDistribution?.fair || 0 },
-    { name: 'TB (≥3)', value: overview.scoreDistribution?.average || 0 },
-    { name: 'Kém (<3)', value: overview.scoreDistribution?.poor || 0 },
+{ name: 'A ', value: overview.scoreDistribution?.excellent || 0 },
+{ name: 'B ',  value: overview.scoreDistribution?.good      || 0 },
+{ name: 'C ', value: overview.scoreDistribution?.fair      || 0 },
+{ name: 'D', value: overview.scoreDistribution?.average   || 0 },
+{ name: 'E ',   value: overview.scoreDistribution?.poor      || 0 },
   ].filter(d => d.value > 0) : [];
 
   const workflowData = overview ? Object.entries(overview.workflowStats || {}).map(([status, count]) => ({
@@ -57,7 +57,7 @@ export default function ReportsPage() {
                   <BarChart data={overview.departmentStats} margin={{ left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="department" tick={{ fontSize: 11 }} />
-                    <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} />
+                   <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
                     <Tooltip formatter={(v, n, p) => [parseFloat(v).toFixed(2), 'Điểm TB']}
                       content={({ active, payload }) => active && payload?.length ? (
                         <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px' }}>
@@ -79,7 +79,7 @@ export default function ReportsPage() {
               <div className="card">
                 <div className="card-header"><div className="card-title">Phân bố xếp loại</div></div>
                 <div className="card-body">
-                  <ResponsiveContainer width="100%" height={260}>
+                  <ResponsiveContainer width="80%" height={290}>
                     <PieChart>
                       <Pie data={distData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={95} label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}>
                         {distData.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
@@ -115,7 +115,7 @@ export default function ReportsPage() {
                     <LineChart data={trend}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                       <XAxis dataKey="period" tick={{ fontSize: 11 }} />
-                      <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
                       <Tooltip formatter={(v) => [parseFloat(v).toFixed(2), 'Điểm TB']} />
                       <Line type="monotone" dataKey="avgScore" stroke="var(--accent)" strokeWidth={2.5} dot={{ r: 5, fill: 'var(--accent)' }} />
                     </LineChart>
@@ -142,7 +142,12 @@ export default function ReportsPage() {
                           <td className="text-sm text-muted">{e.position || '—'}</td>
                           <td><span className="mono" style={{ fontSize: 12 }}>{e.period}</span></td>
                           <td><span style={{ fontWeight: 800, fontSize: 16, color: getScoreColor(e.finalTotalScore) }}>{parseFloat(e.finalTotalScore).toFixed(2)}</span></td>
-                          <td><span className="badge" style={{ background: getScoreColor(e.finalTotalScore) + '1a', color: getScoreColor(e.finalTotalScore) }}>{getScoreColor(e.finalTotalScore) && require('../../utils/helpers').getScoreLabel(e.finalTotalScore)}</span></td>
+                          <td><span className="badge" style={{
+  background: getScoreColor(e.finalTotalScore) + '1a',
+  color: getScoreColor(e.finalTotalScore)
+}}>
+  {getScoreLabel(e.finalTotalScore)}
+</span></td>
                         </tr>
                       ))}
                     </tbody>

@@ -11,7 +11,7 @@ import { formatDate, getRoleLabel } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 import { Plus, Search, Edit2, Trash2, Mail } from 'lucide-react';
 
-const ROLES = ['employee', 'manager', 'director', 'admin'];
+const ROLES = ['employee', 'manager', 'director', 'admin', 'chairman'];
 
 function buildDeptOptions(depts) {
   const map = {};

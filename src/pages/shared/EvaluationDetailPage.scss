@@ -1,0 +1,847 @@
+// EvaluationDetail.scss
+
+.eval-document {
+  background: #fff;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 13px;
+  color: #000;
+  padding: 28px 32px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+// Header styles
+.eval-doc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+
+  .logo-left img,
+  .logo-right img {
+    height: 52px;
+    object-fit: contain;
+  }
+
+  .logo-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    img {
+      height: 38px;
+      
+      &:nth-child(2),
+      &:nth-child(3) {
+        height: 44px;
+      }
+    }
+  }
+
+  .title-center {
+    text-align: center;
+    flex: 1;
+
+    .main-title {
+      font-size: 17px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .company-en {
+      font-size: 12px;
+      font-style: italic;
+    }
+
+    .period-input {
+      font-size: 12px;
+      margin-top: 4px;
+
+      input {
+        border: none;
+        border-bottom: 1px solid #000;
+        outline: none;
+        width: 100px;
+        font-family: inherit;
+        font-size: 12px;
+        text-align: center;
+      }
+    }
+  }
+}
+
+.eval-divider {
+  border: none;
+  border-top: 2px solid #000;
+  margin: 6px 0 10px;
+}
+
+.eval-note {
+  font-size: 11.5px;
+  font-style: italic;
+  margin-bottom: 2px;
+}
+
+.eval-note-small {
+  font-size: 11.5px;
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+// Rating table
+.rating-table-container {
+  margin-bottom: 12px;
+
+  .rating-title {
+    font-style: italic;
+    font-weight: 700;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .rating-table {
+    border-collapse: collapse;
+    font-size: 12px;
+    width: 200px;
+
+    th {
+      background: #c00000;
+      color: #fff;
+      font-weight: 700;
+      text-align: center;
+      padding: 7px 8px;
+      border: 1px solid #999;
+    }
+
+    td {
+      border: 1px solid #999;
+      padding: 6px 8px;
+      text-align: center;
+    }
+  }
+}
+
+// Common table cell styles
+%cell-base {
+  border: 1px solid #999;
+  padding: 6px 8px;
+  vertical-align: middle;
+  font-size: 12.5px;
+}
+
+.label-cell {
+  @extend %cell-base;
+  font-weight: 700;
+  background: #f5f5f5;
+  white-space: nowrap;
+  width: 200px;
+}
+
+.data-cell {
+  @extend %cell-base;
+
+  input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-family: inherit;
+    font-size: 13px;
+  }
+}
+
+// Evaluation info table
+.eval-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+
+// KPI score table
+.kpi-score-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+
+  th {
+    background: #c00000;
+    color: #fff;
+    font-weight: 700;
+    text-align: center;
+    padding: 7px 8px;
+    border: 1px solid #999;
+    font-size: 12px;
+  }
+
+  td {
+    @extend %cell-base;
+  }
+
+  .stt-col,
+  .stt-cell {
+    text-align: center;
+    width: 36px;
+  }
+
+  .criteria-col,
+  .criteria-cell {
+    text-align: left;
+  }
+
+  .max-score-col,
+  .max-score-cell {
+    text-align: center;
+    width: 80px;
+  }
+
+  .self-col,
+  .self-score-cell {
+    text-align: center;
+    width: 95px;
+
+    input {
+      border: none;
+      outline: none;
+      width: 100%;
+      text-align: center;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      background: transparent;
+    }
+  }
+
+  .mgr-col,
+  .mgr-score-cell {
+    text-align: center;
+    width: 100px;
+    color: #aaa;
+  }
+
+  .criteria-name {
+    font-weight: 600;
+    white-space: pre-wrap;
+  }
+
+  .criteria-desc {
+    font-size: 11.5px;
+    color: #555;
+    margin-top: 2px;
+  }
+
+  .achievement-input {
+    margin-top: 6px;
+    border: none;
+    border-bottom: 1px dashed #aaa;
+    outline: none;
+    width: 100%;
+    font-family: inherit;
+    font-size: 12px;
+    background: transparent;
+  }
+
+  .achievement-value {
+    font-size: 11.5px;
+    color: #333;
+    margin-top: 2px;
+  }
+
+  .total-row {
+    td {
+      background: #c00000;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .total-label {
+      text-align: right;
+      padding-right: 16px;
+    }
+
+    .total-max,
+    .total-self,
+    .total-mgr,
+    .total-final {
+      text-align: center;
+      font-weight: 900;
+      font-size: 14px;
+    }
+  }
+
+  .rank-row {
+    td {
+      background: #e8e8e8;
+    }
+
+    .rank-label {
+      text-align: right;
+      padding-right: 16px;
+      font-weight: 700;
+    }
+
+    .rank-value {
+      text-align: center;
+      font-weight: 900;
+      font-size: 15px;
+    }
+  }
+
+  // For detailed view with 6 columns
+  &.full-scores {
+    .self-score-value,
+    .mgr-score-value,
+    .final-score-value {
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .self-score-value {
+      font-weight: 600;
+    }
+
+    .mgr-score-value {
+      color: #d97706;
+    }
+
+    .final-score-value {
+      font-weight: 800;
+    }
+
+    .edit-scores {
+      margin-top: 8px;
+      display: flex;
+      gap: 8px;
+
+      input:first-child {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px 6px;
+        width: 80px;
+        font-family: inherit;
+        font-size: 13px;
+        text-align: center;
+      }
+
+      .achievement-input {
+        border: none;
+        border-bottom: 1px dashed #aaa;
+        outline: none;
+        flex: 1;
+        font-family: inherit;
+        font-size: 12px;
+        background: transparent;
+        margin-top: 0;
+      }
+    }
+  }
+}
+
+// Comment table
+.comment-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+
+  td {
+    @extend %cell-base;
+  }
+
+  .comment-cell {
+    padding: 6px 8px;
+
+    .comment-title {
+      font-weight: 700;
+      font-style: italic;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    textarea {
+      border: none;
+      outline: none;
+      resize: vertical;
+      width: 100%;
+      font-family: inherit;
+      font-size: 12px;
+      min-height: 60px;
+      background: transparent;
+    }
+
+    .comment-content {
+      min-height: 40px;
+      font-style: italic;
+      font-size: 12px;
+    }
+  }
+
+  .confirm-note {
+    font-style: italic;
+    font-size: 11.5px;
+  }
+
+  .empty-placeholder {
+    min-height: 40px;
+  }
+
+  .reviewer-info {
+    font-weight: 400;
+    margin-left: 8px;
+  }
+
+  .rejection-reason {
+    background: #fef2f2;
+    color: #b91c1c;
+  }
+
+  .final-rank-label {
+    background: #fff2cc;
+    font-weight: 700;
+  }
+
+  .final-rank-value {
+    background: #fff2cc;
+    text-align: center;
+    font-weight: 900;
+    font-size: 20px;
+  }
+
+  &.full-comments {
+    .sign-name {
+      font-weight: 600;
+    }
+
+    .sign-date {
+      font-size: 11px;
+      color: #555;
+      margin-left: 8px;
+    }
+
+    .sign-empty {
+      color: #aaa;
+      font-style: italic;
+    }
+  }
+}
+
+// Footer
+.eval-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-style: italic;
+  margin-top: 12px;
+  color: #555;
+  border-top: 1px solid #ccc;
+  padding-top: 6px;
+}
+
+// Status wrapper
+.status-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+  gap: 12px;
+  align-items: center;
+}
+
+// Template cards
+.template-cards {
+  .template-card {
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+
+    &:hover {
+      box-shadow: 0 4px 20px rgba(30, 64, 175, 0.15);
+    }
+
+    .template-name {
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .template-badges {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+
+      .period-badge {
+        background: var(--surface-3);
+        color: var(--text-2);
+      }
+
+      .criteria-badge {
+        background: #eff6ff;
+        color: var(--primary);
+      }
+    }
+  }
+}
+
+// Manager review modal styles
+.manager-review-scores {
+  .review-score-item {
+    background: var(--surface-2);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+
+    .review-item-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+
+      .criteria-name {
+        font-weight: 600;
+        font-size: 13px;
+      }
+
+      .self-score-info {
+        font-size: 12px;
+        color: var(--text-3);
+
+        strong {
+          font-weight: 600;
+        }
+      }
+    }
+
+    .review-item-inputs {
+      display: flex;
+      gap: 8px;
+
+      > div {
+        flex: 1;
+      }
+    }
+  }
+}
+
+// Print styles
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .eval-document {
+    padding: 0;
+    border: none;
+    box-shadow: none;
+  }
+}
+// src/styles/variables.scss
+
+// Màu sắc chính
+$primary-color: #c00000;
+$secondary-color: #f5f5f5;
+$success-color: #28a745;
+$warning-color: #ffc107;
+$danger-color: #dc3545;
+$info-color: #17a2b8;
+
+// Màu chữ
+$text-dark: #000;
+$text-light: #fff;
+$text-muted: #555;
+$text-placeholder: #aaa;
+
+// Màu nền
+$bg-light: #fff;
+$bg-gray: #f5f5f5;
+$bg-highlight: #fff2cc;
+$bg-danger: #fef2f2;
+
+// Border
+$border-color: #ccc;
+$border-light: #999;
+
+// Kích thước
+$font-base: 13px;
+$font-small: 11.5px;
+$font-large: 17px;
+
+// Shadow
+$box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+
+// Spacing
+$spacing-xs: 4px;
+$spacing-sm: 6px;
+$spacing-md: 8px;
+$spacing-lg: 12px;
+$spacing-xl: 16px;
+$spacing-xxl: 28px;
+
+// Breakpoints
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+
+// Z-index
+$z-index-dropdown: 1000;
+$z-index-modal: 1050;
+$z-index-tooltip: 1060;
+.rating-table--full {
+  width: 100%;
+  table-layout: fixed;
+
+  th, td {
+    text-align: center;
+    width: 20%;
+  }
+
+  .rank-header,
+  .rank-cell {
+    background-color: #fff;
+    font-weight: bold;
+  }
+}
+/* Thêm vào cuối EvaluationDetailPage.scss
+   Thay thế .rating-table { width: 200px } bằng đoạn này */
+
+.rating-table-container {
+  margin-bottom: 12px;
+
+  .rating-title {
+    font-style: italic;
+    font-weight: 700;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .rating-table {
+    border-collapse: collapse;
+    font-size: 12px;
+    width: 200px; /* mặc định dọc nhỏ */
+
+    th {
+      background: #c00000;
+      color: #fff;
+      font-weight: 700;
+      text-align: center;
+      padding: 7px 8px;
+      border: 1px solid #999;
+    }
+
+    td {
+      border: 1px solid #999;
+      padding: 6px 8px;
+      text-align: center;
+    }
+
+    /* Full width khi dùng class --full */
+    &.rating-table--full {
+      width: 100%;
+      table-layout: fixed;
+
+      th {
+        width: 50%;
+      }
+
+      td {
+        width: 50%;
+      }
+    }
+  }
+}
+
+// ── Manager review modal ──────────────────────────────────────
+.manager-review-scores {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  max-height: 55vh;
+  overflow-y: auto;
+  padding-right: 4px;
+
+  &::-webkit-scrollbar { width: 5px; }
+  &::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+  &::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+  .review-score-item {
+    background: #fafafa;
+    border: 1.5px solid #e8e8e8;
+    border-radius: 10px;
+    padding: 12px 14px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &:hover {
+      border-color: #c00000;
+      box-shadow: 0 2px 8px rgba(192, 0, 0, 0.08);
+    }
+
+    .review-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 8px;
+
+      .criteria-name {
+        font-weight: 700;
+        font-size: 13px;
+        color: #1e293b;
+        line-height: 1.4;
+        flex: 1;
+      }
+
+      .self-score-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 20px;
+        padding: 3px 10px;
+        font-size: 12px;
+        white-space: nowrap;
+        color: #92400e;
+        flex-shrink: 0;
+
+        strong {
+          font-size: 14px;
+          font-weight: 800;
+          color: #c2410c;
+        }
+
+        .max-score-text {
+          color: #b45309;
+          font-size: 11px;
+        }
+      }
+    }
+
+    .review-item-inputs {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 10px;
+      align-items: end;
+
+      .review-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 5px;
+      }
+
+      .score-input-wrap {
+        display: flex;
+        flex-direction: column;
+
+        // wrapper con cho input + /max
+        > div {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .score-number-input {
+          border: 2px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 8px 0;
+          font-size: 22px;
+          font-weight: 900;
+          text-align: center;
+          width: 90px;
+          font-family: inherit;
+          color: #c00000;
+          transition: border-color 0.15s, box-shadow 0.15s;
+          background: #fff;
+
+          &:focus {
+            outline: none;
+            border-color: #c00000;
+            box-shadow: 0 0 0 3px rgba(192, 0, 0, 0.12);
+          }
+
+          &::placeholder { color: #cbd5e1; font-size: 16px; font-weight: 400; }
+
+          // Ẩn spinner number input
+          &::-webkit-outer-spin-button,
+          &::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+          -moz-appearance: textfield;
+        }
+
+        .score-max-hint {
+          font-size: 13px;
+          color: #94a3b8;
+          font-weight: 500;
+        }
+      }
+
+      .note-input-wrap {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 30px;
+
+        .note-text-input {
+          border: 1.5px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 9px 12px;
+          font-size: 13px;
+          width: 100%;
+          font-family: inherit;
+          color: #334155;
+          transition: border-color 0.15s;
+          background: #fff;
+
+          &:focus {
+            outline: none;
+            border-color: #94a3b8;
+            box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.15);
+          }
+
+          &::placeholder { color: #cbd5e1; }
+        }
+      }
+    }
+  }
+}
+
+.manager-review-comment {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 14px;
+
+  .review-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+
+  .form-textarea {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    width: 100%;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.15s;
+
+    &:focus {
+      outline: none;
+      border-color: #94a3b8;
+      box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.12);
+    }
+
+    &::placeholder { color: #cbd5e1; }
+  }
+}

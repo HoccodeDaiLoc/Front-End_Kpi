@@ -1,0 +1,97 @@
+// ── Layout ────────────────────────────────────────────────────
+.profile-wrapper {
+  max-width: 700px;
+}
+
+// ── User card ─────────────────────────────────────────────────
+.profile-card__body {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #E8192C;
+  color: #fff;
+  font-size: 26px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: 1px;
+}
+
+.profile-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1A1A1A;
+  margin-bottom: 4px;
+}
+
+.profile-email {
+  color: var(--text-3, #94a3b8);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+// ── Tabs ──────────────────────────────────────────────────────
+.profile-tabs {
+  margin: 16px 0;
+
+  .tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    &.active {
+      color: #E8192C;
+      border-bottom-color: #E8192C;
+    }
+  }
+}
+
+// ── Form ──────────────────────────────────────────────────────
+.form-input--readonly {
+  background: #f1f5f9;
+  cursor: not-allowed;
+  pointer-events: none;
+  color: #64748b;
+   min-height: 42px;
+   height: auto !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+.form-actions {
+  text-align: right;
+  margin-top: 8px;
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #E8192C;
+    border-color: #E8192C;
+
+    &:hover:not(:disabled) {
+      background: #C8101F;
+      border-color: #C8101F;
+    }
+
+    &:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+  }
+}
+.profile-wrapper {
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;   // ← căn giữa
+}

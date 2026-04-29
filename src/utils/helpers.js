@@ -1,17 +1,21 @@
-export const getScoreColor = (score) => {
-  if (score >= 9) return '#10b981';
-  if (score >= 7) return '#3b82f6';
-  if (score >= 5) return '#f59e0b';
-  if (score >= 3) return '#f97316';
-  return '#ef4444';
+export const getScoreLabel = (score) => {
+  const t = parseFloat(score) || 0;
+  if (t >= 95) return 'A';
+  if (t >= 86) return 'B';
+  if (t >= 76) return 'C';
+  if (t >= 66) return 'D';
+  if (t > 0)   return 'E';
+  return '—';
 };
 
-export const getScoreLabel = (score) => {
-  if (score >= 9) return 'Xuất sắc';
-  if (score >= 7) return 'Tốt';
-  if (score >= 5) return 'Khá';
-  if (score >= 3) return 'Trung bình';
-  return 'Kém';
+export const getScoreColor = (score) => {
+  const t = parseFloat(score) || 0;
+  if (t >= 95) return '#10b981'; // A — xanh lá
+  if (t >= 86) return '#3b82f6'; // B — xanh dương
+  if (t >= 76) return '#f59e0b'; // C — vàng
+  if (t >= 66) return '#f97316'; // D — cam
+  if (t > 0)   return '#ef4444'; // E — đỏ
+  return '#94a3b8';
 };
 
 export const getStatusColor = (status) => {
@@ -37,7 +41,7 @@ export const getStatusLabel = (status) => {
 };
 
 export const getRoleLabel = (role) => {
-  const map = { admin: 'Quản trị viên', employee: 'Nhân viên', manager: 'Quản lý', director: 'Ban lãnh đạo' };
+  const map = { admin: 'Quản trị viên', employee: 'Nhân viên', manager: 'Quản lý', director: 'Ban lãnh đạo' ,chairman: 'Ban kiểm soát' };
   return map[role] || role;
 };
 

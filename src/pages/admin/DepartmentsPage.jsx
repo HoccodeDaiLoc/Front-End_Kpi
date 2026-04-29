@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../../components/layout/Header';
 import { getDepartments, createDepartment, updateDepartment, deleteDepartment } from '../../api/departments';
+import { userAPI } from '../../api';
 import Modal from '../../components/common/Modal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
-import { Plus, Edit2, Trash2, ChevronDown, ChevronRight, Building2, FolderOpen, Folder } from 'lucide-react';
+import { Plus, Edit2, Trash2, ChevronDown, ChevronRight, Building2, FolderOpen, Folder, UserCheck, UserX } from 'lucide-react';
 import './DepartmentsPage.scss';
 
 function buildTree(depts) {
@@ -18,7 +19,7 @@ function buildTree(depts) {
   return roots;
 }
 
-function TreeNode({ node, level = 0, onEdit, onDelete, onAddChild }) {
+function TreeNode({ node, level = 0, onEdit, onDelete, onAddChild, onEditHead }) {
   const [open, setOpen] = useState(true);
   const hasChildren = node.children?.length > 0;
   const indent = level * 28;
@@ -46,15 +47,44 @@ function TreeNode({ node, level = 0, onEdit, onDelete, onAddChild }) {
           }
         </div>
 
-        {/* Name */}
-        <div className={`dept-tree-name ${nameClass}`}>
-          {node.name}
-          {node.code && <span className="dept-tree-code">({node.code})</span>}
-          {node.members?.length > 0 && <span className="dept-tree-count">· {node.members.length} nhân viên</span>}
+        {/* Name + head info */}
+        <div className={`dept-tree-name ${nameClass}`} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
+          <span>
+            {node.name}
+            {node.code && <span className="dept-tree-code">({node.code})</span>}
+            {node.members?.length > 0 && <span className="dept-tree-count">· {node.members.length} nhân viên</span>}
+          </span>
+          {/* Hiển thị lãnh đạo */}
+          {node.head ? (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              fontSize: 11, color: '#fff',
+              background: '#ef4444',
+              border: '1px solid #dc2626',
+              borderRadius: 20, padding: '2px 8px'
+            }}>
+              <UserCheck size={11} />
+              {node.head.fullName}
+            </span>
+          ) : (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              fontSize: 11, color: 'var(--text-3)',
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border)',
+              borderRadius: 20, padding: '2px 8px'
+            }}>
+              <UserX size={11} />
+              Chưa có lãnh đạo
+            </span>
+          )}
         </div>
 
         {/* Actions */}
         <div className="dept-tree-actions">
+          <button className="btn btn-ghost btn-sm btn-icon" title="Gán lãnh đạo" onClick={() => onEditHead(node)}>
+            <UserCheck size={13} />
+          </button>
           <button className="btn btn-ghost btn-sm btn-icon" title="Thêm phòng con" onClick={() => onAddChild(node)}>
             <Plus size={13} />
           </button>
@@ -71,7 +101,7 @@ function TreeNode({ node, level = 0, onEdit, onDelete, onAddChild }) {
         <div>
           {node.children.map(child => (
             <TreeNode key={child.id} node={child} level={level + 1}
-              onEdit={onEdit} onDelete={onDelete} onAddChild={onAddChild} />
+              onEdit={onEdit} onDelete={onDelete} onAddChild={onAddChild} onEditHead={onEditHead} />
           ))}
         </div>
       )}
@@ -89,6 +119,12 @@ export default function DepartmentsPage() {
   const [form, setForm] = useState({ name: '', code: '', description: '' });
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+
+  // Head modal state
+  const [headModal, setHeadModal] = useState(null); // node đang gán lãnh đạo
+  const [allUsers, setAllUsers] = useState([]);
+  const [selectedHeadId, setSelectedHeadId] = useState('');
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   useEffect(() => { load(); }, []);
 
@@ -120,6 +156,34 @@ export default function DepartmentsPage() {
     setModal('form');
   };
 
+  const openEditHead = async (node) => {
+    setHeadModal(node);
+    setSelectedHeadId(node.head?.id || '');
+    setLoadingUsers(true);
+    try {
+      const res = await userAPI.getUsers({ limit: 200, isActive: true });
+      setAllUsers(res.data.data || []);
+    } catch { toast.error('Lỗi tải danh sách nhân viên'); }
+    finally { setLoadingUsers(false); }
+  };
+
+  const handleSaveHead = async () => {
+    setSaving(true);
+    try {
+      await updateDepartment(headModal.id, {
+        name: headModal.name,
+        code: headModal.code,
+        description: headModal.description,
+        parentId: headModal.parentId,
+        headId: selectedHeadId || null,
+      });
+      toast.success(selectedHeadId ? 'Đã gán lãnh đạo thành công' : 'Đã xóa lãnh đạo');
+      setHeadModal(null);
+      load();
+    } catch (err) { toast.error(err.response?.data?.message || 'Lỗi'); }
+    finally { setSaving(false); }
+  };
+
   const handleSave = async () => {
     if (!form.name) return toast.error('Tên phòng ban bắt buộc');
     setSaving(true);
@@ -143,7 +207,7 @@ export default function DepartmentsPage() {
   const modalTitle = editNode
     ? 'Sửa phòng ban'
     : parentNode ? `Thêm phòng con vào: ${parentNode.name}`
-    : 'Thêm khối / phòng ban gốc';
+      : 'Thêm khối / phòng ban gốc';
 
   return (
     <>
@@ -157,13 +221,15 @@ export default function DepartmentsPage() {
             : tree.length === 0
               ? <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-3)' }}>Chưa có phòng ban nào</div>
               : tree.map(node => (
-                  <TreeNode key={node.id} node={node}
-                    onEdit={openEdit} onDelete={setConfirmDelete} onAddChild={openAddChild} />
-                ))
+                <TreeNode key={node.id} node={node}
+                  onEdit={openEdit} onDelete={setConfirmDelete}
+                  onAddChild={openAddChild} onEditHead={openEditHead} />
+              ))
           }
         </div>
       </div>
 
+      {/* Modal thêm/sửa phòng ban */}
       <Modal open={modal === 'form'} onClose={() => setModal(null)} title={modalTitle}
         footer={<>
           <button className="btn btn-secondary" onClick={() => setModal(null)}>Hủy</button>
@@ -173,7 +239,7 @@ export default function DepartmentsPage() {
         </>}>
         {parentNode && (
           <div className="alert alert-info" style={{ marginBottom: 16, fontSize: 12 }}>
-            📁 Phòng cha: <strong>{parentNode.name}</strong>
+            Thuộc : <strong>{parentNode.name}</strong>
           </div>
         )}
         <div className="form-group">
@@ -187,6 +253,62 @@ export default function DepartmentsPage() {
         <div className="form-group">
           <label className="form-label">Mô tả</label>
           <textarea className="form-textarea" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+        </div>
+      </Modal>
+
+      {/* Modal gán lãnh đạo */}
+      <Modal open={!!headModal} onClose={() => setHeadModal(null)}
+        title={`Lãnh đạo phòng: ${headModal?.name}`}
+        footer={<>
+          <button className="btn btn-secondary" onClick={() => setHeadModal(null)}>Hủy</button>
+          {headModal?.head && (
+            <button className="btn btn-danger btn-sm" onClick={() => { setSelectedHeadId(''); }} style={{ marginRight: 'auto' }}>
+              <UserX size={13} /> Xóa lãnh đạo
+            </button>
+          )}
+          <button className="btn btn-primary" onClick={handleSaveHead} disabled={saving}>
+            {saving ? 'Đang lưu...' : 'Lưu'}
+          </button>
+        </>}>
+
+      {headModal?.head && (
+  <div style={{
+    display: 'flex', alignItems: 'center', gap: 12,
+    background: 'var(--bg-2, #f8fafc)',
+    border: '1px solid var(--border)',
+    borderRadius: 10, padding: '12px 16px', marginBottom: 16
+  }}>
+    <div style={{
+      width: 40, height: 40, borderRadius: '50%',
+      background: 'var(--primary)', color: '#fff',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontWeight: 700, fontSize: 16, flexShrink: 0
+    }}>
+      {headModal.head.fullName?.charAt(0)}
+    </div>
+    <div>
+      <div style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 2 }}>Lãnh đạo hiện tại</div>
+      <div style={{ fontWeight: 700, fontSize: 14 }}>{headModal.head.fullName}</div>
+      {headModal.head.position && <div style={{ fontSize: 12, color: 'var(--text-3)' }}>{headModal.head.position}</div>}
+      {headModal.head.email && <div style={{ fontSize: 12, color: 'var(--text-3)' }}>{headModal.head.email}</div>}
+    </div>
+  </div>
+)}
+        <div className="form-group">
+          <label className="form-label">Chọn lãnh đạo mới</label>
+          {loadingUsers ? (
+            <div style={{ padding: 16, textAlign: 'center' }}><div className="spinner" /></div>
+          ) : (
+            <select className="form-select" value={selectedHeadId}
+              onChange={e => setSelectedHeadId(e.target.value)}>
+              <option value="">— Không có lãnh đạo —</option>
+              {allUsers.map(u => (
+                <option key={u.id} value={u.id}>
+                  {u.fullName || u.email} {u.position ? `(${u.position})` : ''} — {u.department || 'Chưa có phòng ban'}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </Modal>
 

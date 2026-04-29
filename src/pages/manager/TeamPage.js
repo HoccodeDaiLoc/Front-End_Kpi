@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/layout/Header';
 import { getSubordinates } from '../../api/users';
-import { getEvaluations } from '../../api/kpiEvaluations';
+import { evalAPI } from '../../api';
 import { getUserStats } from '../../api/dashboard';
 import { RoleBadge, StatusBadge } from '../../components/common/Badge';
 import { getScoreColor, getScoreLabel } from '../../utils/helpers';
@@ -21,7 +21,7 @@ export default function TeamPage() {
   useEffect(() => {
     Promise.all([
       getSubordinates(),
-      getEvaluations({ limit: 100, status: 'submitted' })
+      evalAPI.getEvaluations({ limit: 100, status: 'submitted' })
     ]).then(([teamRes, evalsRes]) => {
       setTeam(teamRes.data.data);
       setTeamEvals(evalsRes.data.data);

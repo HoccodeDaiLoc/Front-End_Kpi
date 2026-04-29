@@ -1,0 +1,577 @@
+// ==========================================
+// LOGIN PAGE - Brick Red Theme
+// Giống hệt mẫu HTML/CSS ban đầu
+// ==========================================
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.auth-page {
+  --cream: #f2ede6;
+  --red: #b22222;        // Đỏ gạch chủ đạo
+  --red-dark: #8b1a1a;
+  --dark: #1a1a1a;
+  --white: #ffffff;
+  --gray: #9ba3a8;
+  
+  font-family: 'DM Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--cream);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+// ==========================================
+// SVG Filters
+// ==========================================
+
+.filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+// ==========================================
+// FALLING SHAPES BACKGROUND
+// ==========================================
+
+.shapes-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.shape {
+  position: absolute;
+  top: -180px;
+  animation: fall linear infinite;
+  will-change: transform;
+  filter: blur(0.3px);
+  opacity: 0.9;
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(-150px) translateX(0px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  25% {
+    transform: translateY(25vh) translateX(40px) rotate(90deg);
+  }
+  50% {
+    transform: translateY(50vh) translateX(-50px) rotate(180deg);
+  }
+  75% {
+    transform: translateY(75vh) translateX(60px) rotate(270deg);
+  }
+  100% {
+    transform: translateY(110vh) translateX(-70px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.shape-circle {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f06545, #e03015 55%, #9a1a08);
+  filter: url(#grain);
+}
+
+.shape-star {
+  background: radial-gradient(circle at 42% 38%, #c82010, #7a1008);
+  filter: url(#grain);
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+
+.shape-half {
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background: radial-gradient(circle at 40% 28%, #d2d7db, #9aa0a6 50%, #6a7278);
+  filter: url(#grain);
+}
+
+.shape-dot {
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #f06545, #e03015 55%, #9a1a08);
+  filter: url(#grain);
+}
+
+// ==========================================
+// MAIN CARD
+// ==========================================
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 390px 1fr;
+  width: min(920px, 95vw);
+  min-height: 570px;
+  background: var(--white);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.14), 0 8px 24px rgba(0, 0, 0, 0.08);
+  animation: cardIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(36px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// ==========================================
+// FORM SIDE
+// ==========================================
+
+.form-side {
+  padding: 44px 40px;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 36px;
+  
+  img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 8px;
+    padding: 4px;
+    background: #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  }
+  
+  .brand-main {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 0.5px;
+  }
+  
+  .brand-sub {
+    font-size: 11px;
+    color: #b0aba3;
+    font-weight: 400;
+  }
+}
+
+.form-title {
+  font-family: 'DM Serif Display', 'Times New Roman', serif;
+  font-size: 24px;
+  line-height: 1.3;
+  color: var(--dark);
+  margin-bottom: 6px;
+  
+  .sub-title {
+    font-size: 16px;
+    color: #b0aba3;
+    font-weight: 400;
+  }
+  
+  .main-title {
+    font-size: 24px;
+    font-weight: 500;
+  }
+}
+
+.form-sub {
+  font-size: 13px;
+  color: var(--gray);
+  margin-bottom: 34px;
+}
+
+// Form Fields
+.field {
+  position: relative;
+  margin-bottom: 22px;
+  
+  input {
+    width: 100%;
+    padding: 14px 12px;
+    border-radius: 10px;
+    border: 1.5px solid #e5e2dc;
+    background: #faf8f5;
+    font-size: 14px;
+    font-family: 'DM Sans', 'Inter', sans-serif;
+    transition: all 0.25s;
+    outline: none;
+    
+    &:focus {
+      border-color: var(--red);
+      background: #fff;
+      box-shadow: 0 6px 20px rgba(178, 34, 34, 0.08);
+    }
+  }
+  
+  label {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    font-size: 12px;
+    color: #aaa;
+    transition: all 0.2s;
+    pointer-events: none;
+  }
+  
+  input:focus + label,
+  input:not(:placeholder-shown) + label {
+    top: -6px;
+    left: 10px;
+    font-size: 10px;
+    background: #fff;
+    padding: 0 6px;
+    color: var(--red);
+  }
+}
+
+// Submit Button
+.btn-submit {
+  margin-top: 28px;
+  width: 100%;
+  padding: 14px;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+  
+  &:hover:not(:disabled) {
+    background: var(--red-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(178, 34, 34, 0.35);
+  }
+  
+  &:active:not(:disabled) {
+    transform: none;
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .btn-text {
+    transition: all 0.25s;
+  }
+  
+  &:hover:not(:disabled) .btn-text {
+    transform: translateX(4px);
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.12);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+  
+  &:hover:not(:disabled)::after {
+    transform: scaleX(1);
+  }
+  
+  // Loading state
+  &.loading .btn-text {
+    opacity: 0;
+  }
+  
+  &.loading::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Forgot password link
+.forgot-link {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--red);
+  text-decoration: none;
+  transition: color 0.2s;
+  
+  &:hover {
+    color: var(--red-dark);
+    text-decoration: underline;
+  }
+}
+
+// Terms
+.terms {
+  margin-top: 18px;
+  font-size: 11px;
+  color: #b0aba3;
+  text-align: center;
+  line-height: 1.7;
+  
+  a {
+    color: var(--gray);
+    text-decoration: underline;
+    transition: color 0.2s;
+    
+    &:hover {
+      color: var(--red);
+    }
+  }
+}
+
+// ==========================================
+// BANNER SIDE
+// ==========================================
+
+.banner-side {
+  position: relative;
+  overflow: hidden;
+  background: #1a1a1a;
+}
+
+.banner-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.banner-slide {
+  min-width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    transition: opacity 0.3s ease;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(10, 5, 0, 0.75) 0%,
+      rgba(10, 5, 0, 0.25) 45%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+}
+
+// Caption
+.caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 28px 28px 24px;
+  z-index: 2;
+  animation: captionIn 0.5s ease both;
+}
+
+@keyframes captionIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.caption-tag {
+  display: inline-block;
+  background: var(--red);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.caption-title {
+  font-family: 'DM Serif Display', 'Times New Roman', serif;
+  font-size: 20px;
+  line-height: 1.3;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.caption-sub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+// Navigation Arrows
+.barrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.32);
+    transform: translateY(-50%) scale(1.08);
+  }
+}
+
+.banner-side:hover .barrow {
+  opacity: 1;
+}
+
+.barrow-prev {
+  left: 12px;
+}
+
+.barrow-next {
+  right: 12px;
+}
+
+// Navigation Dots
+.banner-nav {
+  position: absolute;
+  bottom: 16px;
+  right: 22px;
+  display: flex;
+  gap: 6px;
+  z-index: 3;
+}
+
+.bdot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+  padding: 0;
+  
+  &.active {
+    width: 20px;
+    border-radius: 4px;
+    background: #fff;
+  }
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.8);
+  }
+}
+
+// ==========================================
+// RESPONSIVE
+// ==========================================
+
+@media (max-width: 768px) {
+  .login-card {
+    grid-template-columns: 1fr;
+  }
+  
+  .banner-side {
+    display: none;
+  }
+  
+  .form-side {
+    padding: 32px 24px;
+  }
+  
+  .brand {
+    margin-bottom: 24px;
+  }
+  
+  .form-title {
+    font-size: 20px;
+    
+    .main-title {
+      font-size: 20px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .form-side {
+    padding: 24px 20px;
+  }
+  
+  .field input {
+    padding: 12px 10px;
+  }
+  
+  .btn-submit {
+    padding: 12px;
+  }
+}
+
+// ==========================================
+// FONT IMPORTS (nếu cần)
+// ==========================================
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap');

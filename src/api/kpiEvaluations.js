@@ -6,3 +6,4 @@ export const updateEvaluation = (id, data) => api.put(`/kpi-evaluations/${id}`, 
 export const submitEvaluation = (id) => api.post(`/kpi-evaluations/${id}/submit`);
 export const managerReview = (id, data) => api.post(`/kpi-evaluations/${id}/manager-review`, data);
 export const directorApprove = (id, data) => api.post(`/kpi-evaluations/${id}/director-approve`, data);
+export const deleteEvaluation = (id) => api.delete(`/kpi-evaluations/${id}`);

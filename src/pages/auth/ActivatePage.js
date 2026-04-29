@@ -30,13 +30,13 @@ export default function ActivatePage() {
     <div className="auth-layout">
       <div className="auth-card fade-in">
         {done ? (
-          <div className="flex-center" style={{flexDirection:'column',gap:16,padding:'20px 0'}}>
-            <div style={{width:64,height:64,background:'#f0fdf4',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div className="flex-center" style={{ flexDirection: 'column', gap: 16, padding: '20px 0' }}>
+            <div style={{ width: 64, height: 64, background: '#f0fdf4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <CheckCircle size={32} color="var(--success)" />
             </div>
             <h2 className="auth-title">Kích hoạt thành công!</h2>
-            <p style={{color:'var(--text-3)',textAlign:'center'}}>Tài khoản đã được kích hoạt.</p>
-            <button className="btn btn-primary btn-lg w-full" onClick={() => navigate('/login')}>Đăng nhập</button>
+            <p style={{ color: 'var(--text-3)', textAlign: 'center' }}>Tài khoản đã được kích hoạt.</p>
+            <button className="btn btn-primary btn-lg w-full" onClick={() => navigate('/login')}  style={{ background: '#E8192C', borderColor: '#E8192C' }}>Đăng nhập</button>
           </div>
         ) : (
           <>
@@ -53,7 +53,12 @@ export default function ActivatePage() {
                 <input className="form-input" type="password" value={confirm}
                   onChange={e => setConfirm(e.target.value)} placeholder="Nhập lại mật khẩu" />
               </div>
-              <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading}>
+              <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading} style={{
+                background: '#E8192C',
+                borderColor: '#E8192C',
+                display: 'block',
+                margin: '0 auto',
+              }}>
                 {loading ? 'Đang xử lý...' : 'Kích hoạt tài khoản'}
               </button>
             </form>

@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 import AppLayout from './components/layout/AppLayout';
 import Spinner from './components/common/Spinner';
 
@@ -56,7 +57,7 @@ function AppRoutes() {
       <Route path="/evaluation/:id" element={<PrivateRoute><EvaluationDetailPage /></PrivateRoute>} />
 
       {/* Employee */}
-      <Route path="/employee/evaluations" element={<PrivateRoute roles={['employee', 'admin']}><EvaluationsPage /></PrivateRoute>} />
+      <Route path="/employee/evaluations" element={<PrivateRoute roles={['employee', 'manager', 'director', 'admin']}><EvaluationsPage /></PrivateRoute>} />
 
       {/* Manager */}
       <Route path="/manager/team" element={<PrivateRoute roles={['manager', 'admin']}><TeamPage /></PrivateRoute>} />
@@ -73,6 +74,11 @@ function AppRoutes() {
       <Route path="/admin/evaluations" element={<PrivateRoute roles={['admin']}><EvaluationsPage /></PrivateRoute>} />
       <Route path="/admin/reports" element={<PrivateRoute roles={['admin']}><ReportsPage /></PrivateRoute>} />
 
+      {/* Chairman */}
+      <Route path="/chairman/evaluations" element={<PrivateRoute roles={['chairman','admin']}><EvaluationsPage /></PrivateRoute>} />
+      <Route path="/chairman/reports"     element={<PrivateRoute roles={['chairman','admin']}><ReportsPage /></PrivateRoute>} />
+      <Route path="/chairman/templates"   element={<PrivateRoute roles={['chairman','admin']}><KpiTemplatesPage /></PrivateRoute>} />
+
       {/* Fallback */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
@@ -84,17 +90,19 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <AppRoutes />
-        <Toaster position="top-right" toastOptions={{
-          style: {
-            fontFamily: "'Be Vietnam Pro', sans-serif",
-            fontSize: '13.5px',
-            borderRadius: '10px',
-            boxShadow: '0 4px 20px rgba(0,0,0,.12)'
-          },
-          success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
-          error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } }
-        }} />
+        <NotificationProvider>
+          <AppRoutes />
+          <Toaster position="top-right" toastOptions={{
+            style: {
+              fontFamily: "'Be Vietnam Pro', sans-serif",
+              fontSize: '13.5px',
+              borderRadius: '10px',
+              boxShadow: '0 4px 20px rgba(0,0,0,.12)'
+            },
+            success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
+            error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } }
+          }} />
+        </NotificationProvider>
       </BrowserRouter>
     </AuthProvider>
   );
