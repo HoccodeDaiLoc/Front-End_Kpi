@@ -93,7 +93,7 @@ export default function ReportsPage() {
 
               {/* Workflow status */}
               <div className="card">
-                <div className="card-header"><div className="card-title">Trạng thái workflow</div></div>
+                <div className="card-header"><div className="card-title">Trạng thái duyệt</div></div>
                 <div className="card-body">
                   <ResponsiveContainer width="100%" height={260}>
                     <BarChart data={workflowData} layout="vertical">

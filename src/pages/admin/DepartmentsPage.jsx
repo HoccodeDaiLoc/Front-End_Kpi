@@ -119,7 +119,7 @@ export default function DepartmentsPage() {
   const [form, setForm] = useState({ name: '', code: '', description: '' });
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
-
+ const [headSearch, setHeadSearch] = useState('');
   // Head modal state
   const [headModal, setHeadModal] = useState(null); // node đang gán lãnh đạo
   const [allUsers, setAllUsers] = useState([]);
@@ -159,6 +159,7 @@ export default function DepartmentsPage() {
   const openEditHead = async (node) => {
     setHeadModal(node);
     setSelectedHeadId(node.head?.id || '');
+    setHeadSearch(''); 
     setLoadingUsers(true);
     try {
       const res = await userAPI.getUsers({ limit: 200, isActive: true });
@@ -239,7 +240,7 @@ export default function DepartmentsPage() {
         </>}>
         {parentNode && (
           <div className="alert alert-info" style={{ marginBottom: 16, fontSize: 12 }}>
-            Thuộc : <strong>{parentNode.name}</strong>
+            Thuộc: <strong>{parentNode.name}</strong>
           </div>
         )}
         <div className="form-group">
@@ -294,22 +295,113 @@ export default function DepartmentsPage() {
     </div>
   </div>
 )}
-        <div className="form-group">
-          <label className="form-label">Chọn lãnh đạo mới</label>
-          {loadingUsers ? (
-            <div style={{ padding: 16, textAlign: 'center' }}><div className="spinner" /></div>
-          ) : (
-            <select className="form-select" value={selectedHeadId}
-              onChange={e => setSelectedHeadId(e.target.value)}>
-              <option value="">— Không có lãnh đạo —</option>
-              {allUsers.map(u => (
-                <option key={u.id} value={u.id}>
-                  {u.fullName || u.email} {u.position ? `(${u.position})` : ''} — {u.department || 'Chưa có phòng ban'}
-                </option>
-              ))}
-            </select>
-          )}
+        {/* Tìm kiếm + chọn lãnh đạo */}
+<div className="form-group">
+  <label className="form-label">Chọn lãnh đạo mới</label>
+  {loadingUsers ? (
+    <div style={{ padding: 16, textAlign: 'center' }}><div className="spinner" /></div>
+  ) : (
+    <>
+      {/* Ô search */}
+      <input
+        className="form-input"
+        placeholder=" Tìm theo tên, email, chức vụ..."
+        value={headSearch}
+        onChange={e => setHeadSearch(e.target.value)}
+        style={{ marginBottom: 8 }}
+        autoFocus
+      />
+
+      {/* Danh sách kết quả */}
+      <div style={{
+        border: '1px solid var(--border)',
+        borderRadius: 8,
+        maxHeight: 260,
+        overflowY: 'auto',
+      }}>
+        {/* Option không có lãnh đạo */}
+        <div
+          onClick={() => setSelectedHeadId('')}
+          style={{
+            padding: '10px 14px',
+            cursor: 'pointer',
+            fontSize: 13,
+            color: 'var(--text-3)',
+            borderBottom: '1px solid var(--border)',
+            background: selectedHeadId === '' ? 'var(--primary-light, #eff6ff)' : 'transparent',
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}
+        >
+          <UserX size={14} />
+          — Không có lãnh đạo —
         </div>
+
+        {/* Danh sách nhân viên đã lọc */}
+        {allUsers
+          .filter(u => {
+            const q = headSearch.toLowerCase();
+            return (
+              u.fullName?.toLowerCase().includes(q) ||
+              u.email?.toLowerCase().includes(q) ||
+              u.position?.toLowerCase().includes(q)
+            );
+          })
+          .map(u => (
+            <div
+              key={u.id}
+              onClick={() => setSelectedHeadId(u.id)}
+              style={{
+                padding: '10px 14px',
+                cursor: 'pointer',
+                borderBottom: '1px solid var(--border)',
+                background: selectedHeadId === u.id ? 'var(--primary-light, #eff6ff)' : 'transparent',
+                display: 'flex', alignItems: 'center', gap: 10,
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => { if (selectedHeadId !== u.id) e.currentTarget.style.background = 'var(--surface-2)'; }}
+              onMouseLeave={e => { if (selectedHeadId !== u.id) e.currentTarget.style.background = 'transparent'; }}
+            >
+              {/* Avatar chữ cái */}
+              <div style={{
+                width: 32, height: 32, borderRadius: '50%',
+                background: selectedHeadId === u.id ? 'var(--primary)' : 'var(--surface-2)',
+                color: selectedHeadId === u.id ? '#fff' : 'var(--text-2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 700, fontSize: 13, flexShrink: 0,
+                transition: 'all 0.15s',
+              }}>
+                {u.fullName?.charAt(0) || '?'}
+              </div>
+
+              {/* Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>{u.fullName || u.email}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-3)' }}>
+                  {[u.position, u.department].filter(Boolean).join(' · ') || u.email}
+                </div>
+              </div>
+
+              {/* Check icon nếu đang chọn */}
+              {selectedHeadId === u.id && (
+                <UserCheck size={15} color="var(--primary)" style={{ flexShrink: 0 }} />
+              )}
+            </div>
+          ))
+        }
+
+        {/* Không tìm thấy */}
+        {headSearch && allUsers.filter(u => {
+          const q = headSearch.toLowerCase();
+          return u.fullName?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.position?.toLowerCase().includes(q);
+        }).length === 0 && (
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>
+            Không tìm thấy nhân viên nào
+          </div>
+        )}
+      </div>
+    </>
+  )}
+</div>
       </Modal>
 
       <ConfirmDialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)} onConfirm={handleDelete}
