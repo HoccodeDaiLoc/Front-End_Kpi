@@ -145,14 +145,12 @@ const handleClick = (n) => {
     </div>
   );
 }
-
 export default function Header({ title, subtitle, actions }) {
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
-  // Đóng khi click ra ngoài
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener('mousedown', handler);
@@ -160,13 +158,15 @@ export default function Header({ title, subtitle, actions }) {
   }, []);
 
   return (
-    <header className="header">
-      <div>
-        <div className="header-title">{title}</div>
+    <header className="header" style={{ flexWrap: 'wrap', height: 'auto', minHeight: 'var(--header-h)', padding: '8px 24px', gap: 8 }}>
+      <div style={{ minWidth: 0 }}>
+        <div className="header-title" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '60vw' }}>
+          {title}
+        </div>
         {subtitle && <div className="header-sub">{subtitle}</div>}
       </div>
       <div className="header-spacer" />
-      <div className="header-actions">
+      <div className="header-actions" style={{ flexWrap: 'wrap', gap: 6 }}>
         {actions}
         <div ref={ref} style={{ position: 'relative' }}>
           <button className="btn btn-ghost btn-icon" onClick={() => setOpen(o => !o)}>

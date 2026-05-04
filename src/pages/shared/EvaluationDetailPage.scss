@@ -845,3 +845,128 @@ $z-index-tooltip: 1060;
     &::placeholder { color: #cbd5e1; }
   }
 }
+@media (max-width: 768px) {
+
+  /* ── Header actions wrap xuống dòng ── */
+  .header {
+    flex-wrap: wrap;
+    height: auto !important;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 6px;
+  }
+
+  .header-actions .btn {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+
+  .header-title {
+    font-size: 14px;
+  }
+
+  /* ── Eval document ── */
+  .eval-document {
+    padding: 12px !important;
+  }
+
+  /* ── Doc header 3 cột → xếp dọc ── */
+  .eval-doc-header {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .logo-left img {
+    max-width: 120px;
+  }
+
+  .logo-right {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .logo-right img {
+    max-width: 60px;
+    height: auto;
+  }
+
+  .main-title {
+    font-size: 16px !important;
+  }
+
+  /* ── Bảng info (Họ tên, phòng ban...) scroll ngang ── */
+  .eval-info-table,
+  .kpi-score-table,
+  .comment-table,
+  .rating-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  /* ── Bảng KPI score thu gọn ── */
+  .kpi-score-table th,
+  .kpi-score-table td {
+    font-size: 11px !important;
+    padding: 6px 6px !important;
+  }
+
+  .stt-col, .stt-cell {
+    width: 28px !important;
+    min-width: 28px !important;
+  }
+
+  .max-score-col,
+  .max-score-cell {
+    width: 50px !important;
+    min-width: 50px !important;
+  }
+
+  .self-col, .mgr-col,
+  .self-score-cell, .mgr-score-cell,
+  .self-score-value, .mgr-score-value,
+  .final-score-value {
+    width: 55px !important;
+    min-width: 55px !important;
+  }
+
+  /* ── Page content padding ── */
+  .page-content {
+    padding: 12px 8px !important;
+  }
+
+  /* ── Modal full screen ── */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal, .modal-lg, .modal-xl {
+    max-width: 100% !important;
+    border-radius: 16px 16px 0 0;
+    max-height: 90vh;
+  }
+
+  /* ── Review score items ── */
+  .review-score-item {
+    padding: 10px !important;
+  }
+
+  .review-item-inputs {
+    flex-direction: column !important;
+    gap: 8px;
+  }
+}
