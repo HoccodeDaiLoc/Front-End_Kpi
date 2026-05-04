@@ -243,7 +243,9 @@ export default function DashboardPage() {
                     {overview.summary?.avgScore?.toFixed(1)}
                     {overview.summary?.avgScore > 0 && <RankBadge score={overview.summary.avgScore} />}
                   </div>
-                  <div className="stat-label">Điểm TB toàn công ty</div>
+                  <div className="stat-label">
+  {user?.role === 'director' ? 'Điểm TB phòng ban' : 'Điểm TB toàn công ty'}
+</div>
                 </div>
               </div>
             </div>
