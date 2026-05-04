@@ -87,15 +87,19 @@ export default function KpiTemplatesPage() {
     const c = [...f.criteria]; c[i] = { ...c[i], [field]: val }; return { ...f, criteria: c };
   });
 
-  const handleSave = async () => {
-    if (!form.name) return toast.error('Tên mẫu KPI bắt buộc');
-    setSaving(true);
-    try {
-      const totalCriteria = form.criteria.length;
-      const criteriaWithWeight = form.criteria.map(c => ({
-        ...c,
-        weight: totalCriteria > 0 ? parseFloat((100 / totalCriteria).toFixed(2)) : 0
-      }));
+const handleSave = async () => {
+  if (!form.name) return toast.error('Tên mẫu KPI bắt buộc');
+  setSaving(true);
+  try {
+    const totalCriteria = form.criteria.length;
+    const baseWeight = totalCriteria > 0 ? parseFloat((100 / totalCriteria).toFixed(2)) : 0;
+    const criteriaWithWeight = form.criteria.map((c, index) => {
+      const isLast = index === totalCriteria - 1;
+      const weight = isLast
+        ? parseFloat((100 - baseWeight * (totalCriteria - 1)).toFixed(2))
+        : baseWeight;
+      return { ...c, weight };
+    });
       const payload = { ...form, criteria: criteriaWithWeight };
       if (editId) await updateTemplate(editId, payload);
       else await createTemplate(payload);
