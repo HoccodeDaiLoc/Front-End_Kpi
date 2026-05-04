@@ -31,7 +31,7 @@ export default function ProfilePage() {
       directManagerId: user.directManagerId || '',
       directorId: user.directorId || ''
     });
-    getManagers().then(r => setManagers(r.data.data)).catch(() => {});
+    getManagers().then(r => setManagers(r.data.data)).catch(() => { });
   }, [user]);
 
   const handleProfileSave = async () => {
@@ -126,22 +126,25 @@ export default function ProfilePage() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Phòng ban</label>
-                    <input className="form-input" value={form.department}
-                      onChange={e => setForm({ ...form, department: e.target.value })} />
+                    <div className="form-input form-input--readonly">
+                      {form.department || '— Chưa cập nhật —'}
+                    </div>
+                  </div>
+
+
+                </div>
+                <div className="form-row">
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Quản lý trực tiếp</label>
+                      <div className="form-input form-input--readonly">
+                        {currentManager
+                          ? `${currentManager.fullName} (${currentManager.position || currentManager.role})`
+                          : '— Không có —'}
+                      </div>
+                    </div>
                   </div>
                 </div>
-               <div className="form-row">
-<div className="form-row">
-  <div className="form-group">
-    <label className="form-label">Quản lý trực tiếp</label>
-    <div className="form-input form-input--readonly">
-      {currentManager
-        ? `${currentManager.fullName} (${currentManager.position || currentManager.role})`
-        : '— Không có —'}
-    </div>
-  </div>
-</div>
-</div>
                 <div className="form-actions">
                   <button className="btn btn-primary" onClick={handleProfileSave} disabled={saving}>
                     <Save size={14} /> {saving ? 'Đang lưu...' : 'Lưu thay đổi'}

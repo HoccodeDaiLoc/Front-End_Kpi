@@ -172,7 +172,7 @@ export default function EvaluationsPage() {
                   <th>Kỳ</th>
                   <th>Trạng thái</th>
                   <th>Tự đánh giá</th>
-                  <th>Điểm QL</th>
+                 
                   <th>Điểm cuối</th>
                   <th>Ngày nộp</th>
                   <th></th>
@@ -198,11 +198,7 @@ export default function EvaluationsPage() {
                             ? <span style={{ fontWeight: 600 }}>{parseFloat(ev.selfTotalScore).toFixed(0)}</span>
                             : '—'}
                         </td>
-                        <td>
-                          {ev.managerTotalScore
-                            ? <span style={{ fontWeight: 600 }}>{parseFloat(ev.managerTotalScore).toFixed(0)}</span>
-                            : '—'}
-                        </td>
+                       
                         <td>
                           {ev.finalTotalScore ? (
                             <span style={{ fontWeight: 700, color: getScoreColor(ev.finalTotalScore) }}>
