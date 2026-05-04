@@ -91,23 +91,21 @@ const handleSave = async () => {
   if (!form.name) return toast.error('Tên mẫu KPI bắt buộc');
   setSaving(true);
   try {
-    const totalCriteria = form.criteria.length;
-    const baseWeight = totalCriteria > 0 ? parseFloat((100 / totalCriteria).toFixed(2)) : 0;
-    const criteriaWithWeight = form.criteria.map((c, index) => {
-      const isLast = index === totalCriteria - 1;
-      const weight = isLast
-        ? parseFloat((100 - baseWeight * (totalCriteria - 1)).toFixed(2))
-        : baseWeight;
-      return { ...c, weight };
-    });
-      const payload = { ...form, criteria: criteriaWithWeight };
-      if (editId) await updateTemplate(editId, payload);
-      else await createTemplate(payload);
-      toast.success(editId ? 'Cập nhật thành công' : 'Tạo mẫu KPI thành công');
-      setModal(null); load();
-    } catch (err) { toast.error(err.response?.data?.message || 'Lỗi lưu'); }
-    finally { setSaving(false); }
-  };
+    const payload = {
+      ...form,
+      criteria: form.criteria.map(c => ({ ...c, weight: 0 }))
+    };
+    if (editId) await updateTemplate(editId, payload);
+    else await createTemplate(payload);
+    toast.success(editId ? 'Cập nhật thành công' : 'Tạo mẫu KPI thành công');
+    setModal(null);
+    load();
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Lỗi lưu');
+  } finally {
+    setSaving(false);
+  }
+};
   const handleRevoke = async (departmentIds) => {
     const label = departmentIds.length ? `${departmentIds.length} phòng ban` : 'tất cả phòng ban';
     if (!window.confirm(`Thu hồi mẫu KPI khỏi ${label}?`)) return;
