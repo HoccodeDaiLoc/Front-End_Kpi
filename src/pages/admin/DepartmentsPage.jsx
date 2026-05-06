@@ -185,18 +185,24 @@ export default function DepartmentsPage() {
     finally { setSaving(false); }
   };
 
-  const handleSave = async () => {
-    if (!form.name) return toast.error('Tên phòng ban bắt buộc');
-    setSaving(true);
-    try {
-      if (editNode) await updateDepartment(editNode.id, form);
-      else await createDepartment({ ...form, parentId: parentNode?.id || null });
-      toast.success(editNode ? 'Cập nhật thành công' : 'Tạo phòng ban thành công');
-      setModal(null); load();
-    } catch (err) { toast.error(err.response?.data?.message || 'Lỗi'); }
-    finally { setSaving(false); }
-  };
-
+const handleSave = async () => {
+  if (!form.name) return toast.error('Tên phòng ban bắt buộc');
+  setSaving(true);
+  try {
+    if (editNode) {
+      await updateDepartment(editNode.id, {
+        ...form,
+        parentId: editNode.parentId ?? null, // ← giữ nguyên parentId cũ
+        headId: editNode.headId ?? null,      // ← giữ nguyên headId cũ
+      });
+    } else {
+      await createDepartment({ ...form, parentId: parentNode?.id || null });
+    }
+    toast.success(editNode ? 'Cập nhật thành công' : 'Tạo phòng ban thành công');
+    setModal(null); load();
+  } catch (err) { toast.error(err.response?.data?.message || 'Lỗi'); }
+  finally { setSaving(false); }
+};
   const handleDelete = async () => {
     try {
       await deleteDepartment(confirmDelete.id);
