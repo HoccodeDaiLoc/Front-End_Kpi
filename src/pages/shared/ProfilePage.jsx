@@ -34,17 +34,20 @@ export default function ProfilePage() {
     getManagers().then(r => setManagers(r.data.data)).catch(() => { });
   }, [user]);
 
-  const handleProfileSave = async () => {
-    setSaving(true);
-    try {
-      const res = await updateProfile(form);
-      updateUser(res.data.data);
-      toast.success('Cập nhật hồ sơ thành công');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Lỗi cập nhật');
-    } finally { setSaving(false); }
-  };
-
+const handleProfileSave = async () => {
+  setSaving(true);
+  try {
+    const res = await updateProfile({
+      ...form,
+      directManagerId: form.directManagerId || null,
+      directorId: form.directorId || null,
+    });
+    updateUser(res.data.data);
+    toast.success('Cập nhật hồ sơ thành công');
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Lỗi cập nhật');
+  } finally { setSaving(false); }
+};
   const handlePasswordChange = async () => {
     if (pwForm.newPassword.length < 6) return toast.error('Mật khẩu tối thiểu 6 ký tự');
     if (pwForm.newPassword !== pwForm.confirmPassword) return toast.error('Mật khẩu không khớp');
