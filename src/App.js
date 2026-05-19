@@ -34,6 +34,8 @@ import ExamResultsPage from './pages/shared/Examresultspage';
 import TeamPage from './pages/manager/TeamPage';
 import DirectorStaffPage from './pages/shared/Directorstaffpage';
 import ExamVerifyPage from './pages/shared/ExamVerifyPage';
+import ExamDonePage from './pages/shared/ExamDonePage';
+import TakeExamMobilePage from './pages/shared/TakeExamMobilePage';
 const PrivateRoute = ({ children, roles }) => {
   const { user, loading } = useAuth();
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}><div className="spinner spinner-lg" /></div>;
@@ -94,6 +96,7 @@ function AppRoutes() {
 
       <Route path="/my-exams" element={<PrivateRoute><MyExamsPage /></PrivateRoute>} />
       <Route path="/exams/:submissionId/take" element={<PrivateRoute><TakeExamPage /></PrivateRoute>} />
+      <Route path="/my-exams/:submissionId/take" element={<TakeExamMobilePage />} />
       <Route path="/exams/:submissionId/result" element={<PrivateRoute><ExamResultPage /></PrivateRoute>} />
 
       {/* Exam - Admin */}
@@ -103,7 +106,9 @@ function AppRoutes() {
       <Route path="/admin/exam-results" element={<PrivateRoute roles={['admin']}><ExamResultsPage /></PrivateRoute>} />
 <Route path="/admin/exam-results/:assignmentId" element={<PrivateRoute roles={['admin']}><ExamAssignmentPage /></PrivateRoute>} />
 <Route path="/admin/exam-results/:assignmentId/:submissionId" element={<PrivateRoute roles={['admin']}><ExamSubmissionPage /></PrivateRoute>} />
+
 <Route path="/exam-verify" element={<ExamVerifyPage />} />
+<Route path="/exam-done"   element={<ExamDonePage />} />
     </Routes>
   );
 }

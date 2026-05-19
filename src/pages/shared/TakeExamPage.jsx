@@ -4,6 +4,29 @@ import { startExam, saveAnswers, submitExam, logViolation, lockSubmission, getEx
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { Clock, ChevronLeft, ChevronRight, Send, AlertTriangle } from 'lucide-react';
+function WaitingResult({ submissionId, navigate }) {
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await getSessionStatus(submissionId);
+        if (res.data.data.submitted) {
+          clearInterval(interval);
+          navigate(`/exams/${submissionId}/result`);
+        }
+      } catch {}
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [submissionId, navigate]);
+
+  return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, color:'#64748b', fontSize:13 }}>
+      <div style={{ width:10, height:10, borderRadius:'50%', background:'#3b82f6', animation:'pulse 1.5s infinite' }} />
+      Đang chờ kết quả từ điện thoại...
+    </div>
+  );
+}
+
+
 export default function TakeExamPage() {
   const [phase, setPhase] = useState('qr'); // 'qr' | 'exam'
 const [qrData, setQrData] = useState(null);
@@ -40,14 +63,15 @@ useEffect(() => {
       if (res.data.data.verified) {
         clearInterval(pollingRef.current);
         clearInterval(countdownRef.current);
-        setPhase('exam');
+        setPhase('waiting'); // ← đổi từ 'exam' thành 'waiting'
       }
     } catch {}
   }, 2000);
   return () => clearInterval(pollingRef.current);
 }, [phase, qrData, submissionId]);
-
 // Đếm ngược QR
+
+
 useEffect(() => {
   if (phase !== 'qr' || !qrData) return;
   countdownRef.current = setInterval(() => {
@@ -134,19 +158,29 @@ useEffect(() => {
     });
   };
 
-  const handleSubmit = async () => {
-    setSubmitting(true);
-    try {
-      await submitExam(submissionId, answers);
-      toast.success('Nộp bài thành công!');
+const handleSubmit = async () => {
+  setSubmitting(true);
+  try {
+    await submitExam(submissionId, answers);
+    toast.success('Nộp bài thành công!');
+
+    // Nếu là mobile session → xóa token và hiện màn hình cảm ơn
+    if (sessionStorage.getItem('exam_mobile_token')) {
+      sessionStorage.removeItem('exam_mobile_token');
+      sessionStorage.removeItem('exam_mobile_submission');
+      sessionStorage.removeItem('exam_mobile_user');
+      // Hiện trang cảm ơn thay vì navigate
+      navigate('/exam-done'); // tạo trang đơn giản "Đã nộp bài thành công"
+    } else {
       navigate(`/exams/${submissionId}/result`);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Lỗi nộp bài');
-    } finally {
-      setSubmitting(false);
-      setConfirmSubmit(false);
     }
-  };
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Lỗi nộp bài');
+  } finally {
+    setSubmitting(false);
+    setConfirmSubmit(false);
+  }
+};
 
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60);
@@ -217,6 +251,27 @@ if (phase === 'qr') return (
     <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }`}</style>
   </div>
 );
+
+
+// Màn hình chờ — điện thoại đang làm bài   ← thêm vào đây
+if (phase === 'waiting') return (
+  <div style={{ minHeight:'100vh', background:'#f8fafc', display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+    <div style={{ background:'#fff', borderRadius:16, padding:40, maxWidth:400, width:'100%', textAlign:'center', boxShadow:'0 4px 24px rgba(0,0,0,0.06)' }}>
+      <div style={{ fontSize: 56, marginBottom: 16 }}>📱</div>
+      <div style={{ fontSize: 20, fontWeight: 700, color: '#16a34a', marginBottom: 10 }}>
+        Đã xác thực thành công!
+      </div>
+      <div style={{ fontSize: 14, color: '#64748b', lineHeight: 1.6, marginBottom: 24 }}>
+        Bài thi đang được làm trên điện thoại.<br />
+        Kết quả sẽ tự động cập nhật khi nộp xong.
+      </div>
+      <WaitingResult submissionId={submissionId} navigate={navigate} />
+    </div>
+    <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }`}</style>
+  </div>
+);
+
+
 if (phase === 'exam' && loading) return (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
     <div className="spinner spinner-lg" />

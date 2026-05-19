@@ -25,3 +25,10 @@ export const getAssignmentSubmissions = (id) => api.get(`/exam-assignments/${id}
 export const getExamQR        = (subId) => api.get(`/my-exams/${subId}/qr`);
 export const getSessionStatus = (subId) => api.get(`/my-exams/${subId}/session-status`);
 export const verifySession    = (token) => api.get(`/verify-session?token=${token}`);
+// Thêm vào src/api/exams.js
+export const getAuthHeaders = () => {
+  const mobileToken = sessionStorage.getItem('exam_mobile_token');
+  const normalToken = localStorage.getItem('token'); // hoặc tên key bạn đang dùng
+  const token = mobileToken || normalToken;
+  return { Authorization: `Bearer ${token}` };
+};
