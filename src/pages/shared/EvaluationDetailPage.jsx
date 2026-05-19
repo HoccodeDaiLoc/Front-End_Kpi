@@ -638,7 +638,7 @@ const canDirectorApprove = user?.role === 'director' && ev?.status === 'manager_
   footer={<>
     <button className="btn btn-secondary" onClick={() => setReviewModal(null)}>Hủy</button>
     <button className="btn btn-warning" onClick={handleManagerReview} disabled={saving}>
-      {saving ? 'Đang lưu...' : '✓ Xác nhận chấm điểm'}
+      {saving ? 'Đang lưu...' : ' Xác nhận chấm điểm'}
     </button>
   </>}>
 
@@ -690,7 +690,7 @@ const canDirectorApprove = user?.role === 'director' && ev?.status === 'manager_
       <Modal open={reviewModal === 'approve'} onClose={() => setReviewModal(null)} title="Phê duyệt KPI"
         footer={<>
           <button className="btn btn-secondary" onClick={() => setReviewModal(null)}>Hủy</button>
-          <button className="btn btn-success" onClick={() => handleDirectorAction('approve')} disabled={saving}>✓ Phê duyệt</button>
+          <button className="btn btn-success" onClick={() => handleDirectorAction('approve')} disabled={saving}>✓Phê duyệt</button>
         </>}>
         <div className="form-group">
           <label className="form-label">Nhận xét của ban lãnh đạo</label>
@@ -702,7 +702,7 @@ const canDirectorApprove = user?.role === 'director' && ev?.status === 'manager_
       <Modal open={reviewModal === 'reject'} onClose={() => setReviewModal(null)} title="Từ chối KPI"
         footer={<>
           <button className="btn btn-secondary" onClick={() => setReviewModal(null)}>Hủy</button>
-          <button className="btn btn-danger" onClick={() => handleDirectorAction('reject')} disabled={saving}>✗ Từ chối</button>
+          <button className="btn btn-danger" onClick={() => handleDirectorAction('reject')} disabled={saving}> Từ chối</button>
         </>}>
         <div className="alert alert-warning">KPI sẽ bị trả về để nhân viên chỉnh sửa lại.</div>
         <div className="form-group">

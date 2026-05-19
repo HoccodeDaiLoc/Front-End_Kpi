@@ -25,13 +25,24 @@ export default function ForgotPasswordPage() {
               <label className="form-label">Email</label>
               <input className="form-input" type="email" value={email} onChange={e => setEmail(e.target.value)} />
             </div>
-            <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading}>
-              {loading ? 'Đang gửi...' : 'Gửi link'}
+            <button
+              type="submit"
+              className="btn btn-primary btn-lg w-full"
+              disabled={loading}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                textAlign: 'center'
+              }}
+            >
+              {loading ? 'Đang gửi...' : 'Gửi mã'}
             </button>
           </form>
         }
-        <p style={{textAlign:'center',marginTop:20,fontSize:13}}>
-          <Link to="/login" style={{color:'var(--primary)',fontWeight:600}}>← Quay lại đăng nhập</Link>
+        <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13 }}>
+          <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 600 }}>← Quay lại đăng nhập</Link>
         </p>
       </div>
     </div>

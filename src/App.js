@@ -6,11 +6,17 @@ import { NotificationProvider } from './context/NotificationContext';
 import AppLayout from './components/layout/AppLayout';
 import Spinner from './components/common/Spinner';
 
+import ExamAssignmentPage from './pages/admin/ExamAssignmentPage';
+import ExamSubmissionPage from './pages/admin/ExamSubmissionPage';
 // Auth
 import LoginPage from './pages/auth/LoginPage';
 import ActivatePage from './pages/auth/ActivatePage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
-
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import ExamsPage from './pages/admin/ExamsPage';
+import MyExamsPage from './pages/shared/MyExamsPage';
+import TakeExamPage from './pages/shared/TakeExamPage';
+import ExamResultPage from './pages/shared/ExamResultPage';
 // Shared
 import DashboardPage from './pages/shared/DashboardPage';
 import EvaluationsPage from './pages/shared/EvaluationsPage';
@@ -23,10 +29,11 @@ import UsersPage from './pages/admin/UsersPage';
 import DepartmentsPage from './pages/admin/DepartmentsPage';
 import KpiTemplatesPage from './pages/admin/KpiTemplatesPage';
 import ReportsPage from './pages/admin/ReportsPage';
-
+import ExamResultsPage from './pages/shared/Examresultspage';
 // Manager
 import TeamPage from './pages/manager/TeamPage';
-
+import DirectorStaffPage from './pages/shared/Directorstaffpage';
+import ExamVerifyPage from './pages/shared/ExamVerifyPage';
 const PrivateRoute = ({ children, roles }) => {
   const { user, loading } = useAuth();
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}><div className="spinner spinner-lg" /></div>;
@@ -49,6 +56,7 @@ function AppRoutes() {
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/activate" element={<ActivatePage />} />
       <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       {/* Authenticated — all roles */}
       <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
@@ -66,6 +74,7 @@ function AppRoutes() {
       {/* Director */}
       <Route path="/director/evaluations" element={<PrivateRoute roles={['director', 'admin']}><EvaluationsPage /></PrivateRoute>} />
       <Route path="/director/reports" element={<PrivateRoute roles={['director', 'admin']}><ReportsPage /></PrivateRoute>} />
+      <Route path="/director/staff" element={<PrivateRoute roles={['director', 'admin']}><DirectorStaffPage /></PrivateRoute>} />
 
       {/* Admin */}
       <Route path="/admin/users" element={<PrivateRoute roles={['admin']}><UsersPage /></PrivateRoute>} />
@@ -75,13 +84,26 @@ function AppRoutes() {
       <Route path="/admin/reports" element={<PrivateRoute roles={['admin']}><ReportsPage /></PrivateRoute>} />
 
       {/* Chairman */}
-      <Route path="/chairman/evaluations" element={<PrivateRoute roles={['chairman','admin']}><EvaluationsPage /></PrivateRoute>} />
-      <Route path="/chairman/reports"     element={<PrivateRoute roles={['chairman','admin']}><ReportsPage /></PrivateRoute>} />
-      <Route path="/chairman/templates"   element={<PrivateRoute roles={['chairman','admin']}><KpiTemplatesPage /></PrivateRoute>} />
+      <Route path="/chairman/evaluations" element={<PrivateRoute roles={['chairman', 'admin']}><EvaluationsPage /></PrivateRoute>} />
+      <Route path="/chairman/reports" element={<PrivateRoute roles={['chairman', 'admin']}><ReportsPage /></PrivateRoute>} />
+      <Route path="/chairman/templates" element={<PrivateRoute roles={['chairman', 'admin']}><KpiTemplatesPage /></PrivateRoute>} />
 
       {/* Fallback */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
+
+      <Route path="/my-exams" element={<PrivateRoute><MyExamsPage /></PrivateRoute>} />
+      <Route path="/exams/:submissionId/take" element={<PrivateRoute><TakeExamPage /></PrivateRoute>} />
+      <Route path="/exams/:submissionId/result" element={<PrivateRoute><ExamResultPage /></PrivateRoute>} />
+
+      {/* Exam - Admin */}
+      <Route path="/admin/exams" element={<PrivateRoute roles={['admin']}><ExamsPage /></PrivateRoute>} />
+      <Route path="/admin/exam-results" element={<PrivateRoute roles={['admin']}><ExamResultsPage /></PrivateRoute>} />
+
+      <Route path="/admin/exam-results" element={<PrivateRoute roles={['admin']}><ExamResultsPage /></PrivateRoute>} />
+<Route path="/admin/exam-results/:assignmentId" element={<PrivateRoute roles={['admin']}><ExamAssignmentPage /></PrivateRoute>} />
+<Route path="/admin/exam-results/:assignmentId/:submissionId" element={<PrivateRoute roles={['admin']}><ExamSubmissionPage /></PrivateRoute>} />
+<Route path="/exam-verify" element={<ExamVerifyPage />} />
     </Routes>
   );
 }

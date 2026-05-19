@@ -4,8 +4,9 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import {
   LayoutDashboard, Users, Building2, FileText, ClipboardCheck,
-  BarChart3, Settings, LogOut, Target, ChevronRight, UserCheck, X
-} from 'lucide-react';
+  BarChart3, Settings, LogOut, Target, ChevronRight, UserCheck, X, BookOpen,
+  BarChart2  // ← thêm vào đây nếu chưa có
+}  from 'lucide-react';
 import './Sidebar.scss';
 
 const navConfig = {
@@ -15,26 +16,33 @@ const navConfig = {
       { to: '/admin/users', icon: Users, label: 'Quản lý User' },
       { to: '/admin/departments', icon: Building2, label: 'Phòng ban' },
       { to: '/admin/kpi-templates', icon: FileText, label: 'Mẫu KPI' },
+      { to: '/admin/exams', icon: FileText, label: 'Đề thi' },
+      { to: '/admin/exam-results', icon: BarChart2,     label: 'Kết quả đề thi' },
     ]},
     { section: 'KPI', items: [
       { to: '/admin/evaluations', icon: ClipboardCheck, label: 'Danh sách đánh giá' },
       { to: '/admin/reports', icon: BarChart3, label: 'Báo cáo' },
+      
     ]}
   ],
   director: [
     { section: 'Tổng quan', items: [{ to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' }] },
     { section: 'KPI của tôi', items: [
       { to: '/employee/evaluations', icon: Target, label: 'Đánh giá KPI của tôi' },
+      { to: '/my-exams', icon: BookOpen, label: 'Bài kiểm tra' },
     ]},
     { section: 'Quản lý', items: [
+      { to: '/director/staff', icon: Users, label: 'Quản lý Nhân viên' },
       { to: '/director/evaluations', icon: ClipboardCheck, label: 'Phê duyệt KPI' },
       { to: '/director/reports', icon: BarChart3, label: 'Báo cáo' },
+      
     ]}
   ],
   manager: [
     { section: 'Tổng quan', items: [{ to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' }] },
     { section: 'KPI của tôi', items: [
       { to: '/employee/evaluations', icon: Target, label: 'Đánh giá KPI của tôi' },
+      { to: '/my-exams', icon: BookOpen, label: 'Bài kiểm tra' },
     ]},
     { section: 'Quản lý', items: [
       { to: '/manager/team', icon: UserCheck, label: 'Nhân viên của tôi' },
@@ -55,6 +63,7 @@ const navConfig = {
     { section: 'Tổng quan', items: [{ to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' }] },
     { section: 'KPI của tôi', items: [
       { to: '/employee/evaluations', icon: ClipboardCheck, label: 'Đánh giá KPI' },
+      { to: '/my-exams', icon: BookOpen, label: 'Bài kiểm tra' },
     ]}
   ]
 };

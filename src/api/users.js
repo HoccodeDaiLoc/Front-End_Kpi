@@ -7,3 +7,4 @@ export const getManagers = () => api.get('/users/managers');
 export const getSubordinates = () => api.get('/users/subordinates');
 export const resendActivation = (id) => api.post(`/users/${id}/resend-activation`);
 export const bulkCreateUsers = (data) => api.post('/users/bulk', data);
+export const getDirectorStaff = () => api.get('/users/director-staff');

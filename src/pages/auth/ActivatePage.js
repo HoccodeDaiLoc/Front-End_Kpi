@@ -12,7 +12,7 @@ export default function ActivatePage() {
   const [done, setDone] = useState(false);
   const navigate = useNavigate();
   const token = searchParams.get('token');
-
+console.log('Reset token:', token); // null = token bị mất
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (password.length < 6) return toast.error('Mật khẩu tối thiểu 6 ký tự');
@@ -36,7 +36,21 @@ export default function ActivatePage() {
             </div>
             <h2 className="auth-title">Kích hoạt thành công!</h2>
             <p style={{ color: 'var(--text-3)', textAlign: 'center' }}>Tài khoản đã được kích hoạt.</p>
-            <button className="btn btn-primary btn-lg w-full" onClick={() => navigate('/login')}  style={{ background: '#E8192C', borderColor: '#E8192C' }}>Đăng nhập</button>
+            <button
+  className="btn btn-primary btn-lg w-full"
+  onClick={() => navigate('/login')}
+  style={{
+    background: '#E8192C',
+    borderColor: '#E8192C',
+    display: 'flex',               // chuyển sang flex
+    alignItems: 'center',          // căn dọc
+    justifyContent: 'center',      // căn ngang
+    textAlign: 'center',           // dự phòng
+    width: '100%'                  // chắc chắn full width
+  }}
+>
+  Đăng nhập
+</button>
           </div>
         ) : (
           <>
