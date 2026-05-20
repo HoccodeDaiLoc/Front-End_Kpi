@@ -107,19 +107,71 @@ export default function ExamResultPage() {
                       </span>
                     </div>
 
-                    <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
-                      <div>Câu trả lời của bạn: <strong>{ans.answer || '(Chưa trả lời)'}</strong></div>
-                      {!isShortAnswer && (
-                        <div style={{ marginTop: 3 }}>
-                          Đáp án đúng: <strong style={{ color: '#16a34a' }}>{ans.correct_answer}</strong>
-                        </div>
-                      )}
-                      {ans.ai_feedback && (
-                        <div style={{ marginTop: 6, padding: '6px 10px', background: '#f0f9ff', borderRadius: 6, borderLeft: '3px solid #3b82f6', fontSize: 11, color: '#1e40af' }}>
-                          💡 {ans.ai_feedback}
-                        </div>
-                      )}
-                    </div>
+         <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
+  {/* Hiện tất cả options nếu là trắc nghiệm */}
+  {ans.options?.length > 0 && (
+    <div style={{ marginBottom: 8 }}>
+      {ans.options.map(opt => {
+        const isChosen = ans.answer === opt.key || ans.answer?.split(',').includes(opt.key);
+        const isCorrectOpt = ans.correct_answer === opt.key || ans.correct_answer?.split(',').includes(opt.key);
+        return (
+          <div key={opt.key} style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '5px 10px', borderRadius: 6, marginBottom: 4,
+            background: isCorrectOpt ? '#dcfce7' : isChosen ? '#fef2f2' : '#f8fafc',
+            border: `1px solid ${isCorrectOpt ? '#86efac' : isChosen ? '#fca5a5' : '#e2e8f0'}`,
+          }}>
+            <span style={{ fontWeight: 700, color: isCorrectOpt ? '#16a34a' : isChosen ? '#dc2626' : 'var(--text-3)', minWidth: 18 }}>
+              {opt.key}.
+            </span>
+            <span style={{ flex: 1, color: isCorrectOpt ? '#15803d' : isChosen ? '#b91c1c' : 'var(--text-2)' }}>
+              {opt.text}
+            </span>
+            {isCorrectOpt && <CheckCircle size={13} color="#16a34a" />}
+            {isChosen && !isCorrectOpt && <XCircle size={13} color="#dc2626" />}
+          </div>
+        );
+      })}
+    </div>
+  )}
+
+  {/* True/False */}
+  {ans.question_type === 'true_false' && (
+    <div style={{ marginBottom: 8 }}>
+      {['true', 'false'].map(val => {
+        const isChosen = ans.answer === val;
+        const isCorrectOpt = ans.correct_answer === val;
+        return (
+          <div key={val} style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '5px 10px', borderRadius: 6, marginBottom: 4,
+            background: isCorrectOpt ? '#dcfce7' : isChosen ? '#fef2f2' : '#f8fafc',
+            border: `1px solid ${isCorrectOpt ? '#86efac' : isChosen ? '#fca5a5' : '#e2e8f0'}`,
+          }}>
+            <span style={{ flex: 1, color: isCorrectOpt ? '#15803d' : isChosen ? '#b91c1c' : 'var(--text-2)' }}>
+              {val === 'true' ? 'Đúng' : 'Sai'}
+            </span>
+            {isCorrectOpt && <CheckCircle size={13} color="#16a34a" />}
+            {isChosen && !isCorrectOpt && <XCircle size={13} color="#dc2626" />}
+          </div>
+        );
+      })}
+    </div>
+  )}
+
+  {/* Short answer */}
+  {ans.question_type === 'short_answer' && (
+    <div style={{ marginBottom: 6 }}>
+      <div>Câu trả lời của bạn: <strong>{ans.answer || '(Chưa trả lời)'}</strong></div>
+    </div>
+  )}
+
+  {ans.ai_feedback && (
+    <div style={{ marginTop: 6, padding: '6px 10px', background: '#f0f9ff', borderRadius: 6, borderLeft: '3px solid #3b82f6', fontSize: 11, color: '#1e40af' }}>
+      💡 {ans.ai_feedback}
+    </div>
+  )}
+</div>
                   </div>
                 );
               })}
