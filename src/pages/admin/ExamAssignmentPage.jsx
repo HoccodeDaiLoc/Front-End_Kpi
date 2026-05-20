@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../components/layout/Header';
 import { getAssignmentSubmissions } from '../../api/exams';
-import { ChevronLeft, ChevronRight, Search, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, RotateCcw, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import api from '../../api/axios';
 
 const pct = (v) => (v != null ? `${parseFloat(v).toFixed(1)}%` : '—');
 
@@ -21,32 +22,90 @@ const StatusBadge = ({ status }) => {
   );
 };
 
+// Modal xác nhận
+const ConfirmModal = ({ open, title, message, confirmLabel, confirmColor, onConfirm, onCancel }) => {
+  if (!open) return null;
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: '#fff', borderRadius: 12, padding: 28, width: 360, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+        <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 10 }}>{title}</div>
+        <div style={{ fontSize: 14, color: 'var(--text-3)', marginBottom: 24 }}>{message}</div>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+          <button className="btn btn-secondary btn-sm" onClick={onCancel}>Hủy</button>
+          <button className="btn btn-sm" style={{ background: confirmColor, color: '#fff', border: 'none' }} onClick={onConfirm}>
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function ExamAssignmentPage() {
   const { assignmentId } = useParams();
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [modal, setModal] = useState(null); // { type: 'reset'|'delete', submissionId, name }
+  const [actionLoading, setActionLoading] = useState(false);
 
-  useEffect(() => {
+  const fetchData = () => {
+    setLoading(true);
     getAssignmentSubmissions(assignmentId)
       .then(r => setSubmissions(r.data.data))
       .catch(() => toast.error('Không tải được danh sách'))
       .finally(() => setLoading(false));
-  }, [assignmentId]);
+  };
+
+  useEffect(() => { fetchData(); }, [assignmentId]);
 
   const filtered = submissions.filter(s =>
     s.full_name?.toLowerCase().includes(search.toLowerCase()) ||
     s.email?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const graded = submissions.filter(s => s.status === 'graded').length;
-  const passed = submissions.filter(s => s.passed).length;
-  const avgPct = submissions.filter(s => s.percentage != null).length > 0
-    ? submissions.filter(s => s.percentage != null).reduce((a, s) => a + parseFloat(s.percentage), 0) / submissions.filter(s => s.percentage != null).length
+  const graded  = submissions.filter(s => s.status === 'graded').length;
+  const passed  = submissions.filter(s => s.passed).length;
+  const hasPct  = submissions.filter(s => s.percentage != null);
+  const avgPct  = hasPct.length > 0
+    ? hasPct.reduce((a, s) => a + parseFloat(s.percentage), 0) / hasPct.length
     : null;
-
   const dept = submissions[0]?.department_name || '';
+
+const handleReset = async (submissionId) => {
+    setActionLoading(true);
+    try {
+      await api.post(`/exam-submissions/${submissionId}/reset`);
+      toast.success('Đã reset bài làm');
+      fetchData();
+    } catch {
+      toast.error('Reset thất bại');
+    } finally {
+      setActionLoading(false);
+      setModal(null);
+    }
+};
+
+  // Gọi API xóa
+  const handleDelete = async (submissionId) => {
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+const res = await fetch(
+  `/api/exam-submissions/${submissionId}`,
+        { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) throw new Error();
+      toast.success('Đã xóa bài làm');
+      fetchData();
+    } catch {
+      toast.error('Xóa thất bại');
+    } finally {
+      setActionLoading(false);
+      setModal(null);
+    }
+  };
 
   return (
     <>
@@ -59,14 +118,33 @@ export default function ExamAssignmentPage() {
           </button>
         }
       />
+
+      {/* Modal xác nhận */}
+      <ConfirmModal
+        open={!!modal}
+        title={modal?.type === 'reset' ? 'Reset bài làm?' : 'Xóa bài làm?'}
+        message={
+          modal?.type === 'reset'
+            ? `Bài làm của "${modal?.name}" sẽ được đặt lại về trạng thái chưa làm. Hành động này không thể hoàn tác.`
+            : `Bài làm của "${modal?.name}" sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.`
+        }
+        confirmLabel={actionLoading ? 'Đang xử lý...' : modal?.type === 'reset' ? 'Reset' : 'Xóa'}
+        confirmColor={modal?.type === 'reset' ? '#f59e0b' : '#dc2626'}
+        onConfirm={() => {
+          if (modal?.type === 'reset') handleReset(modal.submissionId);
+          else handleDelete(modal.submissionId);
+        }}
+        onCancel={() => setModal(null)}
+      />
+
       <div className="page-content">
         {/* Stats */}
         <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
           {[
             { label: 'Tổng nhân viên', value: submissions.length, color: '#3b82f6' },
-            { label: 'Đã chấm', value: graded, color: '#8b5cf6' },
-            { label: 'Đạt', value: passed, color: '#16a34a' },
-            { label: 'Điểm TB', value: avgPct != null ? pct(avgPct) : '—', color: '#f59e0b' },
+            { label: 'Đã chấm',        value: graded,             color: '#8b5cf6' },
+            { label: 'Đạt',            value: passed,             color: '#16a34a' },
+            { label: 'Điểm TB',        value: avgPct != null ? pct(avgPct) : '—', color: '#f59e0b' },
           ].map((s, i) => (
             <div key={i} className="card" style={{ flex: 1, textAlign: 'center', padding: '16px 8px' }}>
               <div style={{ fontSize: 24, fontWeight: 800, color: s.color }}>{s.value}</div>
@@ -127,20 +205,38 @@ export default function ExamAssignmentPage() {
                     </td>
                     <td>
                       {s.passed == null ? '—' : s.passed
-                        ? <span style={{ color: '#16a34a', fontWeight: 600 }}> Đạt</span>
-                        : <span style={{ color: '#dc2626', fontWeight: 600 }}> Không đạt</span>
+                        ? <span style={{ color: '#16a34a', fontWeight: 600 }}>✓ Đạt</span>
+                        : <span style={{ color: '#dc2626', fontWeight: 600 }}>✗ Không đạt</span>
                       }
                     </td>
                     <td style={{ fontSize: 12, color: 'var(--text-3)' }}>
                       {s.submitted_at ? new Date(s.submitted_at).toLocaleString('vi-VN') : '—'}
                     </td>
                     <td>
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => navigate(`/admin/exam-results/${assignmentId}/${s.submission_id}`)}
-                      >
-                        <ChevronRight size={13} /> Xem bài
-                      </button>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => navigate(`/admin/exam-results/${assignmentId}/${s.submission_id}`)}
+                        >
+                          <ChevronRight size={13} /> Xem bài
+                        </button>
+                        <button
+                          className="btn btn-sm"
+                          title="Reset bài làm"
+                          style={{ background: '#fef9c3', color: '#b45309', border: '1px solid #fde68a', padding: '4px 8px' }}
+                          onClick={() => setModal({ type: 'reset', submissionId: s.submission_id, name: s.full_name })}
+                        >
+                          <RotateCcw size={13} />
+                        </button>
+                        <button
+                          className="btn btn-sm"
+                          title="Xóa bài làm"
+                          style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', padding: '4px 8px' }}
+                          onClick={() => setModal({ type: 'delete', submissionId: s.submission_id, name: s.full_name })}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
