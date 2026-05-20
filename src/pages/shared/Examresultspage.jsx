@@ -7,11 +7,20 @@ import {
 import toast from 'react-hot-toast';
 import {
     ChevronRight, ChevronDown, ChevronLeft, Users, CheckCircle,
-    XCircle, Clock, AlertCircle, BarChart2, Eye, Search, BookOpen
+    XCircle, Clock, AlertCircle, BarChart2, Eye, Search, BookOpen,
+    Download, FileSpreadsheet
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 // ── Helpers ────────────────────────────────────────────────────
 const pct = (v) => (v != null ? `${parseFloat(v).toFixed(1)}%` : '—');
+
+const statusLabel = (s) => ({
+    pending: 'Chưa làm',
+    in_progress: 'Đang làm',
+    submitted: 'Đã nộp',
+    graded: 'Đã chấm',
+}[s] || s || '—');
 
 const StatusBadge = ({ status }) => {
     const cfg = {
@@ -35,11 +44,210 @@ const PassBadge = ({ passed, status }) => {
         : <span style={{ fontSize: 11, fontWeight: 600, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 3 }}><XCircle size={12} />Không đạt</span>;
 };
 
+// ── Export Excel theo từng phòng ban ──────────────────────────
+async function exportDeptExcel(assignment) {
+    const toastId = toast.loading(`Đang xuất Excel: ${assignment.department_name?.trim()}...`);
+    try {
+        const res = await getAssignmentSubmissions(assignment.id);
+        const submissions = res.data.data || [];
+
+        const deptName = assignment.department_name?.trim() || 'Phong_ban';
+        const examTitle = assignment.exam_title || 'De_thi';
+        const now = new Date().toLocaleDateString('vi-VN');
+
+        const wb = XLSX.utils.book_new();
+
+        // ── Sheet 1: Tổng hợp ──
+        const summaryHeader = [
+            [`BÁO CÁO KẾT QUẢ THI`],
+            [`Đề thi: ${examTitle}`],
+            [`Phòng ban: ${deptName}`],
+            [`Ngày xuất: ${now}`],
+            [],
+            [
+                'STT', 'Họ và tên', 'Email',
+                'Trạng thái', 'Điểm số', 'Điểm tối đa',
+                'Phần trăm (%)', 'Kết quả', 'Thời gian nộp'
+            ],
+        ];
+
+        const summaryRows = submissions.map((s, i) => [
+            i + 1,
+            s.full_name || '—',
+            s.email || '—',
+            statusLabel(s.status),
+            s.total_score != null ? parseFloat(s.total_score) : '—',
+            s.max_score != null ? parseFloat(s.max_score) : '—',
+            s.percentage != null ? parseFloat(parseFloat(s.percentage).toFixed(1)) : '—',
+            s.passed == null
+                ? (s.status === 'graded' || s.status === 'submitted' ? 'Chờ chấm' : '—')
+                : s.passed ? 'Đạt' : 'Không đạt',
+            s.submitted_at ? new Date(s.submitted_at).toLocaleString('vi-VN') : '—',
+        ]);
+
+        // Dòng tổng kết
+        const gradedList = submissions.filter(s => s.percentage != null);
+        const passedCount = submissions.filter(s => s.passed).length;
+        const avgScore = gradedList.length
+            ? (gradedList.reduce((a, s) => a + parseFloat(s.percentage), 0) / gradedList.length).toFixed(1)
+            : '—';
+
+        const summaryFooter = [
+            [],
+            ['TỔNG KẾT', '', '', '',
+                '', '', '', '', ''],
+            ['Tổng số người', submissions.length],
+            ['Đã chấm', submissions.filter(s => s.status === 'graded').length],
+            ['Đạt', passedCount],
+            ['Không đạt', submissions.filter(s => s.passed === false).length],
+            ['Điểm TB (%)', avgScore !== '—' ? `${avgScore}%` : '—'],
+            ['Tỉ lệ đạt', submissions.length > 0 ? `${((passedCount / submissions.length) * 100).toFixed(1)}%` : '—'],
+        ];
+
+        const summaryData = [...summaryHeader, ...summaryRows, ...summaryFooter];
+        const wsSum = XLSX.utils.aoa_to_sheet(summaryData);
+
+        // Style cột
+        wsSum['!cols'] = [
+            { wch: 5 }, { wch: 25 }, { wch: 28 },
+            { wch: 12 }, { wch: 10 }, { wch: 12 },
+            { wch: 14 }, { wch: 12 }, { wch: 20 },
+        ];
+
+        // Merge title rows
+        wsSum['!merges'] = [
+            { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } },
+            { s: { r: 1, c: 0 }, e: { r: 1, c: 8 } },
+            { s: { r: 2, c: 0 }, e: { r: 2, c: 8 } },
+            { s: { r: 3, c: 0 }, e: { r: 3, c: 8 } },
+        ];
+
+        XLSX.utils.book_append_sheet(wb, wsSum, 'Tổng hợp');
+
+        // ── Sheet 2: Chi tiết từng người ──
+        if (submissions.length > 0) {
+            // Lấy detail 1 bài để biết số câu (lấy bài đầu tiên có submission_id)
+            // Dùng dữ liệu summary đã có, không gọi thêm API để tránh chậm
+            const detailHeader = [
+                [`CHI TIẾT KẾT QUẢ THI — ${deptName}`],
+                [`Đề thi: ${examTitle}   |   Ngày xuất: ${now}`],
+                [],
+                ['STT', 'Họ và tên', 'Email', 'Điểm số', 'Tối đa', 'Phần trăm', 'Kết quả', 'Trạng thái', 'Nộp lúc'],
+            ];
+
+            const detailRows = submissions.map((s, i) => [
+                i + 1,
+                s.full_name || '—',
+                s.email || '—',
+                s.total_score != null ? parseFloat(s.total_score) : '',
+                s.max_score != null ? parseFloat(s.max_score) : '',
+                s.percentage != null ? `${parseFloat(s.percentage).toFixed(1)}%` : '—',
+                s.passed == null ? (s.status === 'graded' ? 'Chờ chấm' : '—') : (s.passed ? 'Đạt' : 'Không đạt'),
+                statusLabel(s.status),
+                s.submitted_at ? new Date(s.submitted_at).toLocaleString('vi-VN') : '—',
+            ]);
+
+            const wsDet = XLSX.utils.aoa_to_sheet([...detailHeader, ...detailRows]);
+            wsDet['!cols'] = [
+                { wch: 5 }, { wch: 25 }, { wch: 28 },
+                { wch: 10 }, { wch: 10 }, { wch: 13 },
+                { wch: 12 }, { wch: 12 }, { wch: 20 },
+            ];
+            wsDet['!merges'] = [
+                { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } },
+                { s: { r: 1, c: 0 }, e: { r: 1, c: 8 } },
+            ];
+            XLSX.utils.book_append_sheet(wb, wsDet, 'Chi tiết');
+        }
+
+        // Xuất file
+        const safeDept = deptName.replace(/[^a-zA-Z0-9À-ỹ\s]/g, '').trim().replace(/\s+/g, '_');
+        const safeExam = examTitle.replace(/[^a-zA-Z0-9À-ỹ\s]/g, '').trim().replace(/\s+/g, '_').slice(0, 30);
+        const fileName = `KetQua_${safeExam}_${safeDept}.xlsx`;
+
+        XLSX.writeFile(wb, fileName);
+        toast.success(`Xuất Excel thành công: ${deptName}`, { id: toastId });
+    } catch (err) {
+        console.error(err);
+        toast.error('Lỗi xuất Excel', { id: toastId });
+    }
+}
+
+// ── Export tất cả phòng ban (mỗi dept = 1 sheet) ─────────────
+async function exportAllDeptExcel(exam) {
+    const toastId = toast.loading(`Đang xuất Excel tất cả phòng ban...`);
+    try {
+        const wb = XLSX.utils.book_new();
+        const now = new Date().toLocaleDateString('vi-VN');
+
+        for (const assignment of exam.assignments) {
+            const res = await getAssignmentSubmissions(assignment.id);
+            const submissions = res.data.data || [];
+            const deptName = assignment.department_name?.trim() || 'Phong_ban';
+
+            const header = [
+                [`BÁO CÁO KẾT QUẢ THI — ${deptName}`],
+                [`Đề thi: ${exam.exam_title}   |   Ngày xuất: ${now}`],
+                [],
+                ['STT', 'Họ và tên', 'Email', 'Trạng thái', 'Điểm số', 'Tối đa', 'Phần trăm (%)', 'Kết quả', 'Nộp lúc'],
+            ];
+
+            const rows = submissions.map((s, i) => [
+                i + 1,
+                s.full_name || '—',
+                s.email || '—',
+                statusLabel(s.status),
+                s.total_score != null ? parseFloat(s.total_score) : '',
+                s.max_score != null ? parseFloat(s.max_score) : '',
+                s.percentage != null ? parseFloat(parseFloat(s.percentage).toFixed(1)) : '',
+                s.passed == null ? (s.status === 'graded' ? 'Chờ chấm' : '—') : (s.passed ? 'Đạt' : 'Không đạt'),
+                s.submitted_at ? new Date(s.submitted_at).toLocaleString('vi-VN') : '—',
+            ]);
+
+            const gradedList = submissions.filter(s => s.percentage != null);
+            const passedCount = submissions.filter(s => s.passed).length;
+            const avgScore = gradedList.length
+                ? (gradedList.reduce((a, s) => a + parseFloat(s.percentage), 0) / gradedList.length).toFixed(1)
+                : '—';
+
+            const footer = [
+                [],
+                ['Tổng số', submissions.length, '', '', '', '', '', '', ''],
+                ['Đã chấm', submissions.filter(s => s.status === 'graded').length],
+                ['Đạt', passedCount],
+                ['Không đạt', submissions.filter(s => s.passed === false).length],
+                ['Điểm TB (%)', avgScore !== '—' ? `${avgScore}%` : '—'],
+            ];
+
+            const ws = XLSX.utils.aoa_to_sheet([...header, ...rows, ...footer]);
+            ws['!cols'] = [
+                { wch: 5 }, { wch: 25 }, { wch: 28 },
+                { wch: 12 }, { wch: 10 }, { wch: 10 },
+                { wch: 14 }, { wch: 12 }, { wch: 20 },
+            ];
+            ws['!merges'] = [
+                { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } },
+                { s: { r: 1, c: 0 }, e: { r: 1, c: 8 } },
+            ];
+
+            // Tên sheet tối đa 31 ký tự, bỏ ký tự đặc biệt
+            const sheetName = deptName.replace(/[\/\\?\*\[\]:]/g, '').slice(0, 31);
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        }
+
+        const safeExam = exam.exam_title.replace(/[^a-zA-Z0-9À-ỹ\s]/g, '').trim().replace(/\s+/g, '_').slice(0, 40);
+        XLSX.writeFile(wb, `KetQua_TatCa_${safeExam}.xlsx`);
+        toast.success('Xuất Excel tất cả phòng ban thành công!', { id: toastId });
+    } catch (err) {
+        console.error(err);
+        toast.error('Lỗi xuất Excel', { id: toastId });
+    }
+}
+
 // ── Panel chi tiết bài làm ────────────────────────────────────
 function SubmissionDetailPanel({ submissionId, onClose }) {
     const [detail, setDetail] = useState(null);
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
 
     useEffect(() => {
         getSubmissionDetail(submissionId)
@@ -57,7 +265,6 @@ function SubmissionDetailPanel({ submissionId, onClose }) {
 
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            {/* Header panel */}
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                     <div style={{ fontWeight: 700, fontSize: 15 }}>{detail.full_name}</div>
@@ -68,7 +275,6 @@ function SubmissionDetailPanel({ submissionId, onClose }) {
                 </button>
             </div>
 
-            {/* Score summary */}
             <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 20 }}>
                 <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 22, fontWeight: 800, color: detail.passed ? '#16a34a' : detail.status === 'graded' ? '#dc2626' : '#f59e0b' }}>
@@ -96,7 +302,6 @@ function SubmissionDetailPanel({ submissionId, onClose }) {
                 )}
             </div>
 
-            {/* Answers */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '14px 20px' }}>
                 {!detail.answers?.length ? (
                     <div style={{ textAlign: 'center', color: 'var(--text-3)', padding: '30px 0', fontSize: 13 }}>
@@ -119,7 +324,6 @@ function SubmissionDetailPanel({ submissionId, onClose }) {
                                     {ans.score != null ? `${ans.score}` : '—'}/{ans.points} đ
                                 </span>
                             </div>
-
                             <div style={{ fontSize: 12, color: 'var(--text-2)', display: 'flex', flexDirection: 'column', gap: 3 }}>
                                 <div>
                                     <span style={{ color: 'var(--text-3)' }}>Trả lời: </span>
@@ -156,7 +360,6 @@ function AssignmentSubmissionsPanel({ assignment, onBack, onSelectSubmission }) 
     useEffect(() => {
         getAssignmentSubmissions(assignment.id)
             .then(r => setSubmissions(r.data.data))
-
             .catch(() => toast.error('Không tải được danh sách'))
             .finally(() => setLoading(false));
     }, [assignment.id]);
@@ -174,16 +377,23 @@ function AssignmentSubmissionsPanel({ assignment, onBack, onSelectSubmission }) 
 
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            {/* Header */}
             <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
-                <button className="btn btn-secondary btn-sm" onClick={onBack} style={{ marginBottom: 10 }}>
-                    <ChevronLeft size={13} /> Quay lại
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <button className="btn btn-secondary btn-sm" onClick={onBack}>
+                        <ChevronLeft size={13} /> Quay lại
+                    </button>
+                    <button
+                        className="btn btn-success btn-sm"
+                        onClick={() => exportDeptExcel(assignment)}
+                        title="Xuất Excel phòng ban này"
+                    >
+                        <FileSpreadsheet size={13} /> Xuất Excel
+                    </button>
+                </div>
                 <div style={{ fontWeight: 700, fontSize: 15 }}>{assignment.department_name?.trim()}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>{assignment.exam_title}</div>
             </div>
 
-            {/* Stats mini */}
             <div style={{ display: 'flex', gap: 12, padding: '12px 20px', borderBottom: '1px solid var(--border)' }}>
                 {[
                     { label: 'Tổng', value: submissions.length, color: '#3b82f6' },
@@ -198,7 +408,6 @@ function AssignmentSubmissionsPanel({ assignment, onBack, onSelectSubmission }) 
                 ))}
             </div>
 
-            {/* Search */}
             <div style={{ padding: '10px 20px', borderBottom: '1px solid var(--border)' }}>
                 <div style={{ position: 'relative' }}>
                     <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)' }} />
@@ -208,7 +417,6 @@ function AssignmentSubmissionsPanel({ assignment, onBack, onSelectSubmission }) 
                 </div>
             </div>
 
-            {/* List */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px 12px' }}>
                 {loading ? (
                     <div style={{ textAlign: 'center', padding: 30 }}><div className="spinner" /></div>
@@ -226,7 +434,6 @@ function AssignmentSubmissionsPanel({ assignment, onBack, onSelectSubmission }) 
                         onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
                         onMouseLeave={e => e.currentTarget.style.background = '#fff'}
                     >
-                        {/* Avatar */}
                         <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
                             {s.full_name?.split(' ').slice(-1)[0]?.[0]?.toUpperCase() || '?'}
                         </div>
@@ -250,15 +457,11 @@ function AssignmentSubmissionsPanel({ assignment, onBack, onSelectSubmission }) 
 
 // ── Main Page ─────────────────────────────────────────────────
 export default function ExamResultsPage() {
-     const navigate = useNavigate();
+    const navigate = useNavigate();
     const [assignments, setAssignments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [expandedExam, setExpandedExam] = useState(null);
-    const [examResults, setExamResults] = useState({}); // examId → dept results
-    const [loadingResults, setLoadingResults] = useState({});
-
-    // Panel state: null | { type: 'submissions', assignment } | { type: 'detail', submissionId, assignment }
     const [panel, setPanel] = useState(null);
 
     useEffect(() => {
@@ -268,7 +471,6 @@ export default function ExamResultsPage() {
             .finally(() => setLoading(false));
     }, []);
 
-    // Group assignments theo exam
     const examMap = {};
     assignments.forEach(a => {
         if (!examMap[a.exam_id]) {
@@ -287,9 +489,8 @@ export default function ExamResultsPage() {
         e.exam_title?.toLowerCase().includes(search.toLowerCase())
     );
 
-    const toggleExam = async (examId) => {
-        if (expandedExam === examId) { setExpandedExam(null); return; }
-        setExpandedExam(examId);
+    const toggleExam = (examId) => {
+        setExpandedExam(prev => prev === examId ? null : examId);
     };
 
     const totalStats = (assignments) => ({
@@ -301,12 +502,10 @@ export default function ExamResultsPage() {
 
     return (
         <div style={{ display: 'flex', height: 'calc(100vh - 0px)', overflow: 'hidden' }}>
-            {/* Main content */}
             <div style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
                 <Header title="Kết quả đề thi" subtitle={`${exams.length} đề thi`} />
 
                 <div className="page-content">
-                    {/* Search */}
                     <div className="card" style={{ marginBottom: 16 }}>
                         <div style={{ padding: '12px 16px' }}>
                             <div style={{ position: 'relative', maxWidth: 320 }}>
@@ -345,7 +544,16 @@ export default function ExamResultsPage() {
                                         </div>
                                     </div>
 
-                                    {/* Progress bar */}
+                                    {/* Nút xuất tất cả */}
+                                    <button
+                                        className="btn btn-secondary btn-sm"
+                                        style={{ flexShrink: 0 }}
+                                        onClick={e => { e.stopPropagation(); exportAllDeptExcel(exam); }}
+                                        title="Xuất Excel tất cả phòng ban (mỗi dept 1 sheet)"
+                                    >
+                                        <Download size={12} /> Xuất tất cả
+                                    </button>
+
                                     <div style={{ width: 120, flexShrink: 0 }}>
                                         <div style={{ fontSize: 10, color: 'var(--text-3)', marginBottom: 3, display: 'flex', justifyContent: 'space-between' }}>
                                             <span>Tiến độ</span>
@@ -359,7 +567,7 @@ export default function ExamResultsPage() {
                                     {isExpanded ? <ChevronDown size={16} color="var(--text-3)" /> : <ChevronRight size={16} color="var(--text-3)" />}
                                 </div>
 
-                                {/* Departments list */}
+                                {/* Departments table */}
                                 {isExpanded && (
                                     <div style={{ borderTop: '1px solid var(--border)' }}>
                                         <table className="table" style={{ margin: 0 }}>
@@ -397,12 +605,21 @@ export default function ExamResultsPage() {
                                                             {new Date(a.sent_at).toLocaleDateString('vi-VN')}
                                                         </td>
                                                         <td>
-                                                            <button
-                                                                className="btn btn-secondary btn-sm"
-                                                                onClick={() => navigate(`/admin/exam-results/${a.id}`)}
-                                                            >
-                                                                <Eye size={12} /> Xem chi tiết
-                                                            </button>
+                                                            <div style={{ display: 'flex', gap: 6 }}>
+                                                                <button
+                                                                    className="btn btn-secondary btn-sm"
+                                                                    onClick={() => navigate(`/admin/exam-results/${a.id}`)}
+                                                                >
+                                                                    <Eye size={12} /> Xem
+                                                                </button>
+                                                                <button
+                                                                    className="btn btn-success btn-sm"
+                                                                    onClick={() => exportDeptExcel({ ...a, exam_title: exam.exam_title })}
+                                                                    title="Xuất Excel phòng ban này"
+                                                                >
+                                                                    <FileSpreadsheet size={12} /> Excel
+                                                                </button>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 ))}
