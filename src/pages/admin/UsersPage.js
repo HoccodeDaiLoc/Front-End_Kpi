@@ -157,7 +157,7 @@ export default function UsersPage() {
   };
 
   const managerList = managers.filter(m => ['manager', 'employee', 'director', 'admin'].includes(m.role));
-  const directorList = managers.filter(m => m.role === 'director');
+  const directorList = managers.filter(m => ['manager', 'director'].includes(m.role));
 
   const ManagerSelect = () => (
     <div className="form-group">
