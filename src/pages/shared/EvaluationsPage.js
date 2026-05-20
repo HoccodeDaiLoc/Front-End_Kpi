@@ -164,7 +164,8 @@ export default function EvaluationsPage() {
           </div>
 
           <div className="table-wrap">
-            <table className="table">
+           <table className="table mobile-hidden">
+             
               <thead>
                 <tr>
                   <th>Nhân viên</th>
@@ -242,13 +243,71 @@ export default function EvaluationsPage() {
                 }
               </tbody>
             </table>
+            <div className="eval-card-list desktop-hidden">
+    {loading
+      ? <div className="table-empty">Đang tải...</div>
+      : evals.length === 0
+        ? <div className="table-empty">Không có đánh giá nào</div>
+        : evals.map(ev => (
+          <div key={ev.id} className="eval-card" onClick={() => navigate(`/evaluation/${ev.id}`)}>
+            <div className="eval-card__header">
+              <div>
+                <div className="eval-card__name">{ev.employee?.fullName || '—'}</div>
+                <div className="eval-card__dept">{ev.employee?.department}</div>
+              </div>
+              <StatusBadge status={ev.status} />
+            </div>
+            <div className="eval-card__body">
+              <div className="eval-card__row">
+                <span>Mẫu KPI</span>
+                <span>{ev.template?.name}</span>
+              </div>
+              <div className="eval-card__row">
+                <span>Kỳ</span>
+                <span>{ev.period}</span>
+              </div>
+              <div className="eval-card__row">
+                <span>Tự đánh giá</span>
+                <span>{ev.selfTotalScore ? parseFloat(ev.selfTotalScore).toFixed(0) : '—'}</span>
+              </div>
+              <div className="eval-card__row">
+                <span>Điểm cuối</span>
+                <span style={{ fontWeight: 700, color: ev.finalTotalScore ? getScoreColor(ev.finalTotalScore) : undefined }}>
+                  {ev.finalTotalScore ? `${parseFloat(ev.finalTotalScore).toFixed(0)} ${calcRank(ev.finalTotalScore)}` : '—'}
+                </span>
+              </div>
+              <div className="eval-card__row">
+                <span>Ngày nộp</span>
+                <span>{formatDate(ev.submittedAt)}</span>
+              </div>
+            </div>
+            <div className="eval-card__footer">
+              <button className="btn btn-ghost btn-sm"
+                onClick={e => { e.stopPropagation(); navigate(`/evaluation/${ev.id}`); }}>
+                {getActionLabel(ev)} <ChevronRight size={13} />
+              </button>
+              {(user?.role === 'admin' ||
+                (['draft', 'rejected'].includes(ev.status) && ev.employee?.id === user?.id)
+              ) && (
+                <button className="btn btn-ghost btn-sm btn-icon"
+                  style={{ color: 'var(--danger)' }}
+                  onClick={e => handleDelete(e, ev.id)}>
+                  <Trash2 size={13} />
+                </button>
+              )}
+            </div>
+          </div>
+        ))
+    }
+  </div>
+</div>
           </div>
 
           <div style={{ padding: '12px 20px' }}>
             <Pagination page={pagination.page} totalPages={pagination.totalPages} onChange={load} />
           </div>
         </div>
-      </div>
+   
     </>
   );
 }

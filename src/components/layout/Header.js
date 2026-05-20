@@ -29,7 +29,7 @@
     const { setUnreadCount } = useNotifications();
     const [notifs, setNotifs] = useState([]);
     const [unread, setUnread] = useState(0);
-    const isMobile = window.innerWidth <= 768;
+    const isMobile = window.innerWidth < 769;
     const [loading, setLoading] = useState(true);
   const handleClick = (n) => {
     if (!n.isRead) handleRead(n.id);

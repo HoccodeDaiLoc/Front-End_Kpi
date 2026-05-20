@@ -92,7 +92,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
       <div className="sidebar-logo">
         <div className="sidebar-logo-image">
-          <img src="/logo viet huong.png" alt="Viet Huong Logo" />
+          <img src="/logo_viet_huong.png" alt="Viet Huong Logo" />
         </div>
         <div>
           <div className="sidebar-logo-text">VIETHUONG KPI</div>
