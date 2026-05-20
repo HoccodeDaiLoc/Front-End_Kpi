@@ -14,7 +14,6 @@ import Spinner from '../../components/common/Spinner';
 import { Send, CheckCircle, XCircle, ArrowLeft, Save, Printer } from 'lucide-react';
 import './EvaluationDetailPage.scss';
 
-/* ── Print CSS ───────────────────────────────────────────────── */
 const PRINT_STYLE = `
   @media print {
     .no-print { display: none !important; }
@@ -44,7 +43,6 @@ const PRINT_STYLE = `
   }
 `;
 
-/* ── Bảng xếp loại ───────────────────────────────────────────── */
 const RATINGS = [
   { range: '95 - 100', rank: 'A' },
   { range: '86 - 94',  rank: 'B' },
@@ -68,7 +66,6 @@ function fmtDateTime(d) {
   return new Date(d).toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
 }
 
-/* ── Header logo ─────────────────────────────────────────────── */
 function DocHeader({ period, onPeriodChange, readOnly }) {
   return (
     <>
@@ -101,7 +98,6 @@ function DocHeader({ period, onPeriodChange, readOnly }) {
   );
 }
 
-/* ── Bảng xếp loại KPI — dọc full width ─────────────────────── */
 function RatingTable() {
   return (
     <div className="rating-table-container">
@@ -126,7 +122,6 @@ function RatingTable() {
   );
 }
 
-/* ── Signature row ───────────────────────────────────────────── */
 function SigRow({ label, name, datetime }) {
   return (
     <tr>
@@ -263,7 +258,6 @@ export default function EvaluationDetailPage() {
     finally { setSaving(false); }
   };
 
-  /* ══ LOADING ══ */
   if (loading) return (
     <>
       <div className="no-print"><Header title="Đánh giá KPI" /></div>
@@ -271,7 +265,6 @@ export default function EvaluationDetailPage() {
     </>
   );
 
-  /* ══ CHỌN TEMPLATE ══ */
   if (isNew && !selectedTpl) {
     return (
       <>
@@ -378,11 +371,24 @@ export default function EvaluationDetailPage() {
                       {selfScores[c.id]?.achievement && <div className="achievement-value">↳ {selfScores[c.id].achievement}</div>}
                     </td>
                     <td className="max-score-cell">{c.maxScore}</td>
+                    {/* FIX 1: dùng selfScores thay vì mgrScores */}
                     <td className="self-score-cell">
                       <input type="number" min={0} max={c.maxScore} step={1}
                         value={selfScores[c.id]?.score ?? ''}
-                        onChange={e => setSelfScores(s => ({ ...s, [c.id]: { ...s[c.id], score: e.target.value } }))}
-                        placeholder="—" />
+                        placeholder="—"
+                        onChange={e => {
+                          const val = e.target.value;
+                          if (val === '' || parseFloat(val) <= c.maxScore) {
+                            setSelfScores(s => ({ ...s, [c.id]: { ...s[c.id], score: val } }));
+                          }
+                        }}
+                        onBlur={e => {
+                          const val = parseFloat(e.target.value);
+                          if (!isNaN(val)) {
+                            const clamped = Math.min(Math.max(val, 0), c.maxScore);
+                            setSelfScores(s => ({ ...s, [c.id]: { ...s[c.id], score: clamped } }));
+                          }
+                        }} />
                     </td>
                     <td className="mgr-score-cell">—</td>
                   </tr>
@@ -456,7 +462,7 @@ export default function EvaluationDetailPage() {
   const canEdit            = ev?.employeeId === user?.id && ['draft', 'rejected'].includes(ev?.status);
   const canSubmit          = ev?.employeeId === user?.id && ['draft', 'rejected'].includes(ev?.status);
   const canManagerReview   = (user?.role === 'manager' || user?.role === 'director') && ev?.status === 'submitted';
-const canDirectorApprove = user?.role === 'director' && ev?.status === 'manager_reviewed';
+  const canDirectorApprove = user?.role === 'director' && ev?.status === 'manager_reviewed';
 
   const criteria     = ev?.template?.criteria || [];
   const totalSelf    = criteria.reduce((s, c) => { const sc = ev?.scores?.find(x => x.criteriaId === c.id); return s + (parseFloat(sc?.selfScore)    || 0); }, 0);
@@ -540,7 +546,19 @@ const canDirectorApprove = user?.role === 'director' && ev?.status === 'manager_
                         <div className="edit-scores no-print">
                           <input type="number" min={0} max={c.maxScore} step={1}
                             value={selfScores[c.id]?.score ?? s?.selfScore ?? ''}
-                            onChange={e => setSelfScores(sc => ({ ...sc, [c.id]: { ...sc[c.id], score: e.target.value } }))}
+                            onChange={e => {
+                              const val = e.target.value;
+                              if (val === '' || parseFloat(val) <= c.maxScore) {
+                                setSelfScores(sc => ({ ...sc, [c.id]: { ...sc[c.id], score: val } }));
+                              }
+                            }}
+                            onBlur={e => {
+                              const val = parseFloat(e.target.value);
+                              if (!isNaN(val)) {
+                                const clamped = Math.min(Math.max(val, 0), c.maxScore);
+                                setSelfScores(sc => ({ ...sc, [c.id]: { ...sc[c.id], score: clamped } }));
+                              }
+                            }}
                             placeholder="Điểm" />
                           <input className="achievement-input"
                             placeholder="Kết quả thực tế..."
@@ -633,64 +651,77 @@ const canDirectorApprove = user?.role === 'director' && ev?.status === 'manager_
       </div>
 
       {/* ── Manager review modal ── */}
-     <Modal open={reviewModal === 'manager'} onClose={() => setReviewModal(null)} 
-  title="Chấm điểm KPI" size="lg"
-  footer={<>
-    <button className="btn btn-secondary" onClick={() => setReviewModal(null)}>Hủy</button>
-    <button className="btn btn-warning" onClick={handleManagerReview} disabled={saving}>
-      {saving ? 'Đang lưu...' : ' Xác nhận chấm điểm'}
-    </button>
-  </>}>
+      <Modal open={reviewModal === 'manager'} onClose={() => setReviewModal(null)}
+        title="Chấm điểm KPI" size="lg"
+        footer={<>
+          <button className="btn btn-secondary" onClick={() => setReviewModal(null)}>Hủy</button>
+          <button className="btn btn-warning" onClick={handleManagerReview} disabled={saving}>
+            {saving ? 'Đang lưu...' : 'Xác nhận chấm điểm'}
+          </button>
+        </>}>
 
-  <div className="manager-review-scores">
-    {criteria.map(c => {
-      const s = ev?.scores?.find(sc => sc.criteriaId === c.id);
-      return (
-        <div key={c.id} className="review-score-item">
-          <div className="review-item-header">
-            <span className="criteria-name">{c.name}</span>
-            <span className="self-score-badge">
-              Tự đánh: <strong>{s?.selfScore ?? '—'}</strong>
-              <span className="max-score-text">/ {c.maxScore}</span>
-            </span>
-          </div>
-          <div className="review-item-inputs">
-            <div className="score-input-wrap">
-              <label className="review-label">Điểm chấm</label>
-              <input type="number" min={0} max={c.maxScore} step={1}
-                className="score-number-input"
-                value={mgrScores[c.id]?.score ?? ''}
-                placeholder="0"
-                onChange={e => setMgrScores(rs => ({ ...rs, [c.id]: { ...rs[c.id], score: e.target.value } }))} />
-              <span className="score-max-hint">/ {c.maxScore}</span>
-            </div>
-            <div className="note-input-wrap">
-              <label className="review-label">Ghi chú</label>
-              <input type="text"
-                className="note-text-input"
-                value={mgrScores[c.id]?.note || ''}
-                placeholder="Nhận xét về tiêu chí này..."
-                onChange={e => setMgrScores(rs => ({ ...rs, [c.id]: { ...rs[c.id], note: e.target.value } }))} />
-            </div>
-          </div>
+        <div className="manager-review-scores">
+          {criteria.map(c => {
+            const s = ev?.scores?.find(sc => sc.criteriaId === c.id);
+            return (
+              <div key={c.id} className="review-score-item">
+                <div className="review-item-header">
+                  <span className="criteria-name">{c.name}</span>
+                  <span className="self-score-badge">
+                    Tự đánh: <strong>{s?.selfScore ?? '—'}</strong>
+                    <span className="max-score-text">/ {c.maxScore}</span>
+                  </span>
+                </div>
+                <div className="review-item-inputs">
+                  <div className="score-input-wrap">
+                    <label className="review-label">Điểm chấm</label>
+                    {/* FIX 2: thêm validation onChange + onBlur cho manager modal */}
+                    <input type="number" min={0} max={c.maxScore} step={1}
+                      className="score-number-input"
+                      value={mgrScores[c.id]?.score ?? ''}
+                      placeholder="0"
+                      onChange={e => {
+                        const val = e.target.value;
+                        if (val === '' || parseFloat(val) <= c.maxScore) {
+                          setMgrScores(rs => ({ ...rs, [c.id]: { ...rs[c.id], score: val } }));
+                        }
+                      }}
+                      onBlur={e => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                          const clamped = Math.min(Math.max(val, 0), c.maxScore);
+                          setMgrScores(rs => ({ ...rs, [c.id]: { ...rs[c.id], score: clamped } }));
+                        }
+                      }} />
+                    <span className="score-max-hint">/ {c.maxScore}</span>
+                  </div>
+                  <div className="note-input-wrap">
+                    <label className="review-label">Ghi chú</label>
+                    <input type="text"
+                      className="note-text-input"
+                      value={mgrScores[c.id]?.note || ''}
+                      placeholder="Nhận xét về tiêu chí này..."
+                      onChange={e => setMgrScores(rs => ({ ...rs, [c.id]: { ...rs[c.id], note: e.target.value } }))} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      );
-    })}
-  </div>
 
-  <div className="manager-review-comment">
-    <label className="review-label">Nhận xét tổng quát</label>
-    <textarea className="form-textarea" rows={3} value={mgrComment}
-      placeholder="Nhận xét chung về kết quả KPI của nhân viên..."
-      onChange={e => setMgrComment(e.target.value)} />
-  </div>
-</Modal>
+        <div className="manager-review-comment">
+          <label className="review-label">Nhận xét tổng quát</label>
+          <textarea className="form-textarea" rows={3} value={mgrComment}
+            placeholder="Nhận xét chung về kết quả KPI của nhân viên..."
+            onChange={e => setMgrComment(e.target.value)} />
+        </div>
+      </Modal>
 
       {/* ── Director approve ── */}
       <Modal open={reviewModal === 'approve'} onClose={() => setReviewModal(null)} title="Phê duyệt KPI"
         footer={<>
           <button className="btn btn-secondary" onClick={() => setReviewModal(null)}>Hủy</button>
-          <button className="btn btn-success" onClick={() => handleDirectorAction('approve')} disabled={saving}>✓Phê duyệt</button>
+          <button className="btn btn-success" onClick={() => handleDirectorAction('approve')} disabled={saving}>✓ Phê duyệt</button>
         </>}>
         <div className="form-group">
           <label className="form-label">Nhận xét của ban lãnh đạo</label>
@@ -702,7 +733,7 @@ const canDirectorApprove = user?.role === 'director' && ev?.status === 'manager_
       <Modal open={reviewModal === 'reject'} onClose={() => setReviewModal(null)} title="Từ chối KPI"
         footer={<>
           <button className="btn btn-secondary" onClick={() => setReviewModal(null)}>Hủy</button>
-          <button className="btn btn-danger" onClick={() => handleDirectorAction('reject')} disabled={saving}> Từ chối</button>
+          <button className="btn btn-danger" onClick={() => handleDirectorAction('reject')} disabled={saving}>Từ chối</button>
         </>}>
         <div className="alert alert-warning">KPI sẽ bị trả về để nhân viên chỉnh sửa lại.</div>
         <div className="form-group">
