@@ -37,6 +37,11 @@ import DirectorStaffPage from './pages/shared/Directorstaffpage';
 import ExamVerifyPage from './pages/shared/ExamVerifyPage';
 import ExamDonePage from './pages/shared/ExamDonePage';
 import TakeExamMobilePage from './pages/shared/TakeExamMobilePage';
+
+import ProposalsPage       from './pages/shared/ProposalsPage';
+import ProposalResultsPage from './pages/shared/ProposalResultsPage';
+import MyProposalsPage     from './pages/shared/MyProposalsPage';
+import TakeProposalPage    from './pages/shared/TakeProposalPage';
 const PrivateRoute = ({ children, roles }) => {
   const { user, loading } = useAuth();
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}><div className="spinner spinner-lg" /></div>;
@@ -110,6 +115,18 @@ function AppRoutes() {
 
 <Route path="/exam-verify" element={<ExamVerifyPage />} />
 <Route path="/exam-done"   element={<ExamDonePage />} />
+<Route path="/proposals"
+  element={<PrivateRoute roles={['admin','chairman','director']}><ProposalsPage /></PrivateRoute>}
+/>
+<Route path="/proposals/:id/results"
+  element={<PrivateRoute roles={['admin','chairman','director']}><ProposalResultsPage /></PrivateRoute>}
+/>
+<Route path="/my-proposals"
+  element={<PrivateRoute><MyProposalsPage /></PrivateRoute>}
+/>
+<Route path="/my-proposals/:id/take"
+  element={<PrivateRoute><TakeProposalPage /></PrivateRoute>}
+/>
     </Routes>
   );
 }

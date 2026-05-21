@@ -5,40 +5,54 @@ import { useNotifications } from '../../context/NotificationContext';
 import {
   LayoutDashboard, Users, Building2, FileText, FlaskConical ,ClipboardCheck,
   BarChart3, Settings, LogOut, Target, ChevronRight, UserCheck, X, BookOpen,
-  BarChart2  // ← thêm vào đây nếu chưa có
+  BarChart2 ,List ,Mailbox ,Vote
 }  from 'lucide-react';
 import './Sidebar.scss';
 
 const navConfig = {
-  admin: [
-    { section: 'Tổng quan', items: [{ to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' }] },
-    { section: 'Quản trị', items: [
-      { to: '/admin/users', icon: Users, label: 'Quản lý User' },
-      { to: '/admin/departments', icon: Building2, label: 'Phòng ban' },
-      { to: '/admin/kpi-templates', icon: FileText, label: 'Mẫu KPI' },
-      { to: '/admin/exams', icon: FlaskConical, label: 'Đề thi' },
-      { to: '/admin/exam-results', icon: BarChart2,     label: 'Kết quả đề thi' },
-    ]},
-    { section: 'KPI', items: [
-      { to: '/admin/evaluations', icon: ClipboardCheck, label: 'Danh sách đánh giá' },
-      { to: '/admin/reports', icon: BarChart3, label: 'Báo cáo' },
-      
-    ]}
-  ],
-  director: [
-    { section: 'Tổng quan', items: [{ to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' }] },
-    { section: 'KPI của tôi', items: [
-      { to: '/employee/evaluations', icon: Target, label: 'Đánh giá KPI của tôi' },
-      { to: '/my-exams', icon: BookOpen, label: 'Bài kiểm tra' },
-    ]},
-    { section: 'Quản lý', items: [
-      { to: '/director/staff', icon: Users, label: 'Quản lý Nhân viên' },
-      { to: '/director/evaluations', icon: ClipboardCheck, label: 'Phê duyệt KPI' },
-      { to: '/director/reports', icon: BarChart3, label: 'Báo cáo' },
-      
-    ]}
-  ],
-  manager: [
+ admin: [
+  { section: 'Tổng quan', items: [
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' }
+  ]},
+  { section: 'Quản trị', items: [
+    { to: '/admin/users', icon: Users, label: 'Quản lý User' },
+    { to: '/admin/departments', icon: Building2, label: 'Phòng ban' },
+    { to: '/admin/kpi-templates', icon: FileText, label: 'Mẫu KPI' },
+  ]},
+  { section: 'Kiểm tra', items: [
+    { to: '/admin/exams', icon: FlaskConical, label: 'Đề thi' },
+    { to: '/admin/exam-results', icon: BarChart2, label: 'Kết quả kiểm tra' },
+  ]},
+  { section: 'KPI', items: [
+    { to: '/admin/evaluations', icon: ClipboardCheck, label: 'Danh sách đánh giá' },
+    { to: '/admin/reports', icon: BarChart3, label: 'Báo cáo' },
+  ]},
+  { section: 'Khảo sát', items: [
+  { to: '/proposals', icon: Mailbox, label: 'Quản lý khảo sát' },
+]}
+  
+],
+director: [
+  { section: 'Tổng quan', items: [
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' }
+  ]},
+  { section: 'KPI của tôi', items: [
+    { to: '/employee/evaluations', icon: Target, label: 'Đánh giá KPI của tôi' },
+    { to: '/my-exams', icon: BookOpen, label: 'Bài kiểm tra' },
+  ]},
+  { section: 'Quản lý', items: [
+    { to: '/director/staff', icon: Users, label: 'Quản lý Nhân viên' },
+    { to: '/director/evaluations', icon: ClipboardCheck, label: 'Phê duyệt KPI' },
+    { to: '/director/reports', icon: BarChart3, label: 'Báo cáo' },
+
+  ]},
+  // ✅ Thêm ra ngoài, cùng cấp với các section khác
+  { section: 'Khảo sát', items: [
+    { to: '/proposals', icon: Mailbox, label: 'Quản lý khảo sát' },
+    { to: '/my-proposals', icon: Vote, label: 'Khảo sát của tôi' },
+  ]},
+],
+manager: [
     { section: 'Tổng quan', items: [{ to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' }] },
     { section: 'KPI của tôi', items: [
       { to: '/employee/evaluations', icon: Target, label: 'Đánh giá KPI của tôi' },
@@ -47,8 +61,13 @@ const navConfig = {
     { section: 'Quản lý', items: [
       { to: '/manager/team', icon: UserCheck, label: 'Nhân viên của tôi' },
       { to: '/manager/evaluations', icon: ClipboardCheck, label: 'Duyệt KPI' },
-    ]}
-  ],
+    ]},
+    // ✅ Thêm đúng cấu trúc
+    { section: 'Khảo sát', items: [
+      { to: '/my-proposals', icon: Vote, label: 'Khảo sát của tôi' },
+    ]},
+],
+
   chairman: [
     { section: 'Tổng quan', items: [
       { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' }
@@ -57,15 +76,22 @@ const navConfig = {
       { to: '/chairman/evaluations', icon: ClipboardCheck, label: 'Danh sách đánh giá' },
       { to: '/chairman/reports', icon: BarChart3, label: 'Báo cáo' },
       { to: '/chairman/templates', icon: FileText, label: 'Mẫu KPI' },
-    ]}
+    ]},
+    { section: 'Khảo sát', items: [
+  { to: '/proposals', icon: Mailbox, label: 'Quản lý khảo sát' },
+]},
   ],
-  employee: [
+employee: [
     { section: 'Tổng quan', items: [{ to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' }] },
     { section: 'KPI của tôi', items: [
       { to: '/employee/evaluations', icon: ClipboardCheck, label: 'Đánh giá KPI' },
       { to: '/my-exams', icon: BookOpen, label: 'Bài kiểm tra' },
-    ]}
-  ]
+    ]},
+    // ✅ Thêm mục khảo sát cho employee
+    { section: 'Khảo sát', items: [
+      { to: '/my-proposals', icon: Vote, label: 'Khảo sát của tôi' },
+    ]},
+],
 };
 
 export default function Sidebar({ isOpen, onClose }) {
