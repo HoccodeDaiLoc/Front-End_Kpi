@@ -75,9 +75,9 @@ function ChartBlock({ question, index }) {
     const totalAnswers = question.chart_data?.length || 0;
 
     const typeLabel = {
-        multiple_choice: '📊 Trắc nghiệm',
-        rating: '⭐ Thang điểm',
-        text: '💬 Văn bản tự do',
+        multiple_choice: 'Trắc nghiệm',
+        rating: ' Thang điểm',
+        text: ' Văn bản tự do',
     }[question.question_type];
 
     return (
@@ -116,9 +116,9 @@ function ChartBlock({ question, index }) {
                                 <div key={i} style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: 10, borderLeft: '3px solid var(--primary)' }}>
                                     <div style={{ fontSize: 13, color: '#1e293b', lineHeight: 1.5 }}>{row.answer}</div>
                                     <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6, display: 'flex', gap: 12 }}>
-                                        <span>👤 {row.user_name}</span>
-                                        <span>🏢 {row.dept_name}</span>
-                                        <span>📅 {new Date(row.answered_at).toLocaleDateString('vi-VN')}</span>
+                                        <span> {row.user_name}</span>
+                                        <span> {row.dept_name}</span>
+                                        <span> {new Date(row.answered_at).toLocaleDateString('vi-VN')}</span>
                                     </div>
                                 </div>
                             ))}
