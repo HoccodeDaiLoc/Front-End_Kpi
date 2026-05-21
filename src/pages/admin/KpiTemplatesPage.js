@@ -5,16 +5,26 @@ import { getDepartments } from '../../api/departments';
 import Modal from '../../components/common/Modal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
-import { Plus, Edit2, Trash2, ChevronDown, ChevronUp, Send, Building2, CheckSquare, Square } from 'lucide-react';
+import { Plus, Edit2, Trash2, ChevronDown, ChevronUp, Send, Building2, CheckSquare, Square, Layers } from 'lucide-react';
 import api from '../../api/axios';
 
-const emptyTemplate = { name: '', description: '', period: 'monthly', isDefault: false, criteria: [] };
+const emptyTemplate = { name: '', description: '', period: 'monthly', isDefault: false, departmentId: '', criteria: [] };
 const emptyCriteria = { name: '', description: '', weight: 0, maxScore: 10, target: '' };
+
+// Màu sắc cho từng khối phòng ban (lấy theo index)
+const GROUP_COLORS = [
+  { bg: '#eff6ff', border: '#bfdbfe', text: '#1d4ed8', dot: '#3b82f6' },
+  { bg: '#f0fdf4', border: '#bbf7d0', text: '#15803d', dot: '#22c55e' },
+  { bg: '#fef3c7', border: '#fde68a', text: '#b45309', dot: '#f59e0b' },
+  { bg: '#fdf4ff', border: '#e9d5ff', text: '#7e22ce', dot: '#a855f7' },
+  { bg: '#fff1f2', border: '#fecdd3', text: '#be123c', dot: '#f43f5e' },
+  { bg: '#f0f9ff', border: '#bae6fd', text: '#0369a1', dot: '#0ea5e9' },
+];
 
 export default function KpiTemplatesPage() {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [modal, setModal] = useState(null); // 'form' | 'send'
+  const [modal, setModal] = useState(null);
   const [form, setForm] = useState(emptyTemplate);
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -22,9 +32,12 @@ export default function KpiTemplatesPage() {
   const [expanded, setExpanded] = useState({});
   const [depts, setDepts] = useState([]);
 
+  // Filter state
+  const [activeGroup, setActiveGroup] = useState('all'); // 'all' | parentDeptId
+
   // Send modal state
-  const [sendTarget, setSendTarget] = useState(null); // template đang gửi
-  const [selectedDepts, setSelectedDepts] = useState([]);   // departmentIds đã chọn
+  const [sendTarget, setSendTarget] = useState(null);
+  const [selectedDepts, setSelectedDepts] = useState([]);
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
@@ -39,10 +52,35 @@ export default function KpiTemplatesPage() {
     finally { setLoading(false); }
   };
 
+  // ── Tính nhóm phòng ban cha ──────────────────────────────────────────────
+  const parentDepts = depts.filter(d => !d.parentId);
+
+  // Lấy tất cả departmentId (cả cha lẫn con) thuộc một nhóm cha
+  const getDeptIdsInGroup = (parentId) => {
+    const children = depts.filter(d => d.parentId === parentId).map(d => d.id);
+    return [parentId, ...children];
+  };
+
+  // Lọc template theo nhóm đang chọn — dựa vào departmentId của template
+  const filteredTemplates = templates.filter(t => {
+    if (activeGroup === 'all') return true;
+    // departmentId của template phải là chính phòng ban cha đó, hoặc con của nó
+    const groupDeptIds = getDeptIdsInGroup(activeGroup);
+    return groupDeptIds.includes(t.departmentId);
+  });
+
+  // Đếm số template theo từng nhóm
+  const countByGroup = (parentId) => {
+    const groupDeptIds = getDeptIdsInGroup(parentId);
+    return templates.filter(t => groupDeptIds.includes(t.departmentId)).length;
+  };
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
   const openCreate = () => { setForm(emptyTemplate); setEditId(null); setModal('form'); };
   const openEdit = (t) => {
     setForm({
       name: t.name, description: t.description || '', period: t.period, isDefault: t.isDefault,
+      departmentId: t.departmentId || '',
       criteria: (t.criteria || []).map(c => ({
         id: c.id, name: c.name, description: c.description || '',
         weight: c.weight, maxScore: c.maxScore, target: c.target || ''
@@ -53,7 +91,6 @@ export default function KpiTemplatesPage() {
 
   const openSend = (t) => {
     setSendTarget(t);
-    // Lấy departmentId từ assignments, không phải assignment.id
     const alreadySent = (t.assignments || []).map(a => a.departmentId || a.department?.id).filter(Boolean);
     setSelectedDepts(alreadySent);
     setModal('send');
@@ -68,9 +105,7 @@ export default function KpiTemplatesPage() {
     if (!selectedDepts.length) return toast.error('Vui lòng chọn ít nhất 1 phòng ban');
     setSending(true);
     try {
-      await api.post(`/kpi-templates/${sendTarget.id}/send`, {
-        departmentIds: selectedDepts
-      });
+      await api.post(`/kpi-templates/${sendTarget.id}/send`, { departmentIds: selectedDepts });
       toast.success(`Đã gửi cho ${selectedDepts.length} phòng ban`);
       setModal(null);
       load();
@@ -87,25 +122,23 @@ export default function KpiTemplatesPage() {
     const c = [...f.criteria]; c[i] = { ...c[i], [field]: val }; return { ...f, criteria: c };
   });
 
-const handleSave = async () => {
-  if (!form.name) return toast.error('Tên mẫu KPI bắt buộc');
-  setSaving(true);
-  try {
-    const payload = {
-      ...form,
-      criteria: form.criteria.map(c => ({ ...c, weight: 0 }))
-    };
-    if (editId) await updateTemplate(editId, payload);
-    else await createTemplate(payload);
-    toast.success(editId ? 'Cập nhật thành công' : 'Tạo mẫu KPI thành công');
-    setModal(null);
-    load();
-  } catch (err) {
-    toast.error(err.response?.data?.message || 'Lỗi lưu');
-  } finally {
-    setSaving(false);
-  }
-};
+  const handleSave = async () => {
+    if (!form.name) return toast.error('Tên mẫu KPI bắt buộc');
+    setSaving(true);
+    try {
+      const payload = { ...form, criteria: form.criteria.map(c => ({ ...c, weight: 0 })) };
+      if (editId) await updateTemplate(editId, payload);
+      else await createTemplate(payload);
+      toast.success(editId ? 'Cập nhật thành công' : 'Tạo mẫu KPI thành công');
+      setModal(null);
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Lỗi lưu');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleRevoke = async (departmentIds) => {
     const label = departmentIds.length ? `${departmentIds.length} phòng ban` : 'tất cả phòng ban';
     if (!window.confirm(`Thu hồi mẫu KPI khỏi ${label}?`)) return;
@@ -118,10 +151,16 @@ const handleSave = async () => {
       toast.error(err.response?.data?.message || 'Lỗi thu hồi');
     }
   };
+
   const handleDelete = async () => {
     try { await deleteTemplate(confirmDelete.id); toast.success('Xóa thành công'); setConfirmDelete(null); load(); }
     catch (err) { toast.error(err.response?.data?.message || 'Lỗi xóa'); }
   };
+
+  // Tên nhóm đang active
+  const activeGroupName = activeGroup === 'all'
+    ? null
+    : parentDepts.find(d => d.id === activeGroup)?.name;
 
   return (
     <>
@@ -129,13 +168,115 @@ const handleSave = async () => {
         actions={<button className="btn btn-primary btn-sm" onClick={openCreate}><Plus size={14} /> Tạo mẫu KPI</button>} />
 
       <div className="page-content">
+
+        {/* ── Bộ lọc theo nhóm phòng ban ── */}
+        {parentDepts.length > 0 && (
+          <div style={{
+            display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16,
+            padding: '12px 16px', background: 'var(--surface-2)',
+            borderRadius: 12, border: '1px solid var(--border)'
+          }}>
+            {/* Nút "Tất cả" */}
+            <button
+              onClick={() => setActiveGroup('all')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 14px', borderRadius: 20, cursor: 'pointer', border: 'none',
+                fontSize: 13, fontWeight: activeGroup === 'all' ? 700 : 500,
+                background: activeGroup === 'all' ? '#eb1010' : 'var(--surface-3)',
+                color: activeGroup === 'all' ? '#fff' : 'var(--text-2)',
+                transition: 'all 0.15s',
+              }}
+            >
+              <Layers size={13} />
+              Tất cả
+              <span style={{
+                background: activeGroup === 'all' ? 'rgba(254, 254, 254, 0.85)' : 'var(--border)',
+                color: activeGroup === 'all' ? '#e30d0de1' : 'var(--text-3)',
+                borderRadius: 20, padding: '1px 7px', fontSize: 11, fontWeight: 700,
+                marginLeft: 2
+              }}>
+                {templates.length}
+              </span>
+            </button>
+
+            {/* Nút từng nhóm/khối */}
+            {parentDepts.map((dept, idx) => {
+              const color = GROUP_COLORS[idx % GROUP_COLORS.length];
+              const isActive = activeGroup === dept.id;
+              const count = countByGroup(dept.id);
+              return (
+                <button
+                  key={dept.id}
+                  onClick={() => setActiveGroup(dept.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '6px 14px', borderRadius: 20, cursor: 'pointer',
+                    fontSize: 13, fontWeight: isActive ? 700 : 500,
+                    border: `1.5px solid ${isActive ? color.border : 'transparent'}`,
+                    background: isActive ? color.bg : 'var(--surface-3)',
+                    color: isActive ? color.text : 'var(--text-2)',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <span style={{
+                    width: 8, height: 8, borderRadius: '50%',
+                    background: isActive ? color.dot : 'var(--text-3)',
+                    flexShrink: 0
+                  }} />
+                  {dept.name}
+                  {count > 0 && (
+                    <span style={{
+                      background: isActive ? color.border : 'var(--border)',
+                      color: isActive ? color.text : 'var(--text-3)',
+                      borderRadius: 20, padding: '1px 7px', fontSize: 11, fontWeight: 700,
+                      marginLeft: 2
+                    }}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── Nhãn bộ lọc đang active ── */}
+        {activeGroup !== 'all' && activeGroupName && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12,
+            fontSize: 13, color: 'var(--text-3)'
+          }}>
+            <Building2 size={13} />
+            Đang xem: <strong style={{ color: 'var(--text-1)' }}>{activeGroupName}</strong>
+            <span>—</span>
+            <span>{filteredTemplates.length} mẫu KPI</span>
+            <button
+              onClick={() => setActiveGroup('all')}
+              style={{ marginLeft: 4, fontSize: 12, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              Xóa lọc ×
+            </button>
+          </div>
+        )}
+
+        {/* ── Danh sách template ── */}
         {loading
           ? <div className="loading-page"><div className="spinner spinner-lg" /></div>
           : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {templates.length === 0
-                ? <div className="card"><div style={{ padding: 48, textAlign: 'center', color: 'var(--text-3)' }}>Chưa có mẫu KPI nào</div></div>
-                : templates.map(t => (
+              {filteredTemplates.length === 0
+                ? (
+                  <div className="card">
+                    <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-3)' }}>
+                      {activeGroup !== 'all'
+                        ? `Chưa có mẫu KPI nào được gửi cho khối "${activeGroupName}"`
+                        : 'Chưa có mẫu KPI nào'
+                      }
+                    </div>
+                  </div>
+                )
+                : filteredTemplates.map(t => (
                   <div key={t.id} className="card">
                     <div className="card-header">
                       <div style={{ flex: 1 }}>
@@ -145,25 +286,63 @@ const handleSave = async () => {
                           <span className="badge" style={{ background: 'var(--surface-3)', color: 'var(--text-2)' }}>
                             {t.period === 'monthly' ? 'Tháng' : t.period === 'quarterly' ? 'Quý' : 'Năm'}
                           </span>
+                          {/* Badge nhóm phòng ban */}
+                          {t.departmentId && (() => {
+                            const dept = depts.find(d => d.id === t.departmentId);
+                            const parentIdx = parentDepts.findIndex(d => d.id === t.departmentId || d.id === dept?.parentId);
+                            const color = GROUP_COLORS[(parentIdx >= 0 ? parentIdx : 0) % GROUP_COLORS.length];
+                            return dept ? (
+                              <span style={{
+                                fontSize: 11, fontWeight: 700,
+                                background: color.bg, color: color.text,
+                                border: `1px solid ${color.border}`,
+                                borderRadius: 20, padding: '2px 9px',
+                                display: 'inline-flex', alignItems: 'center', gap: 4
+                              }}>
+                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: color.dot }} />
+                                {dept.name}
+                              </span>
+                            ) : null;
+                          })()}
                         </div>
                         {t.description && <div className="card-subtitle">{t.description}</div>}
                         <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 4 }}>
                           {t.criteria?.length || 0} tiêu chí
                         </div>
 
-                        {/* Hiển thị phòng ban đã gửi */}
+                        {/* Hiển thị phòng ban đã gửi — khối cha → phòng con */}
                         {t.assignments?.length > 0 && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-                            <Building2 size={12} color="var(--success)" />
-                            <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Đã gửi:</span>
-                            {t.assignments.map(a => (
-                              <span key={a.id} style={{
-                                fontSize: 11, background: '#f0fdf4', color: 'var(--success)',
-                                border: '1px solid #bbf7d0', borderRadius: 20, padding: '2px 8px'
-                              }}>
-                                {a.name}
-                              </span>
-                            ))}
+                          <div style={{ marginTop: 8 }}>
+                            {parentDepts.map((parent, idx) => {
+                              const color = GROUP_COLORS[idx % GROUP_COLORS.length];
+                              const sentDeptIds = t.assignments.map(a => a.departmentId || a.department?.id).filter(Boolean);
+                              // Các phòng CON của khối này đã được gửi
+                              const sentChildren = depts.filter(d => d.parentId === parent.id && sentDeptIds.includes(d.id));
+                              const parentSent = sentDeptIds.includes(parent.id);
+                              if (!parentSent && !sentChildren.length) return null;
+                              // Tên hiển thị bên phải mũi tên
+                              const sentNames = sentChildren.length ? sentChildren.map(d => d.name) : [parent.name];
+                              return (
+                                <div key={parent.id} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
+                                  <span style={{
+                                    fontSize: 11, fontWeight: 700, color: color.text,
+                                    background: color.bg, border: `1px solid ${color.border}`,
+                                    borderRadius: 20, padding: '1px 8px'
+                                  }}>
+                                    {parent.name}
+                                  </span>
+                                  <span style={{ fontSize: 11, color: 'var(--text-3)' }}>→</span>
+                                  {sentNames.map(name => (
+                                    <span key={name} style={{
+                                      fontSize: 11, background: '#f0fdf4', color: 'var(--success)',
+                                      border: '1px solid #bbf7d0', borderRadius: 20, padding: '2px 8px'
+                                    }}>
+                                      {name}
+                                    </span>
+                                  ))}
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -172,7 +351,6 @@ const handleSave = async () => {
                         <button className="btn btn-ghost btn-sm" onClick={() => setExpanded(e => ({ ...e, [t.id]: !e[t.id] }))}>
                           {expanded[t.id] ? <ChevronUp size={14} /> : <ChevronDown size={14} />} Chi tiết
                         </button>
-                        {/* Nút Gửi */}
                         <button
                           className="btn btn-sm"
                           style={{ background: '#E8192C', color: '#fff', borderColor: '#E8192C' }}
@@ -249,81 +427,121 @@ const handleSave = async () => {
         </>}
       >
         <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 16 }}>
-          Chọn phòng ban sẽ thấy và sử dụng mẫu KPI này. Các phòng ban không được chọn sẽ không thấy mẫu này.
+          Chọn phòng ban sẽ thấy và sử dụng mẫu KPI này.
         </p>
 
-        {/* Chọn tất cả */}
-        <div
-          onClick={() => setSelectedDepts(
-            selectedDepts.length === depts.filter(d => !d.parentId).length
-              ? []
-              : depts.filter(d => !d.parentId).map(d => d.id)
-          )}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            padding: '10px 14px', borderRadius: 8, cursor: 'pointer',
-            background: 'var(--surface-2)', border: '1px solid var(--border)',
-            marginBottom: 8, fontWeight: 600, fontSize: 13
-          }}
-        >
-          {selectedDepts.length === depts.length
-            ? <CheckSquare size={16} color="var(--primary)" />
-            : <Square size={16} color="var(--text-3)" />
-          }
-          Chọn tất cả
-        </div>
+        {/* Nhóm theo phòng ban cha */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 420, overflowY: 'auto' }}>
+          {parentDepts.map((parent, idx) => {
+            const color = GROUP_COLORS[idx % GROUP_COLORS.length];
+            const children = depts.filter(d => d.parentId === parent.id);
+            const allDepts = [parent, ...children];
+            const allIds = allDepts.map(d => d.id);
+            const selectedInGroup = allIds.filter(id => selectedDepts.includes(id));
+            const allSelected = selectedInGroup.length === allIds.length;
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 360, overflowY: 'auto' }}>
-          {depts.filter(d => !d.parentId).map(d => {
-            const isSelected = selectedDepts.includes(d.id);
-            const alreadySent = (sendTarget?.assignments || []).some(a => a.department?.id === d.id);
+            const toggleGroup = () => {
+              if (allSelected) {
+                setSelectedDepts(prev => prev.filter(id => !allIds.includes(id)));
+              } else {
+                setSelectedDepts(prev => [...new Set([...prev, ...allIds])]);
+              }
+            };
+
             return (
-              <div
-                key={d.id}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '10px 14px', borderRadius: 8,
-                  border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}`,
-                  background: isSelected ? '#eff6ff' : 'transparent',
-                }}
-              >
-                {/* Checkbox chọn */}
-                <div onClick={() => toggleDept(d.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-                  {isSelected
-                    ? <CheckSquare size={16} color="var(--primary)" />
-                    : <Square size={16} color="var(--text-3)" />
+              <div key={parent.id} style={{
+                border: `1.5px solid ${selectedInGroup.length ? color.border : 'var(--border)'}`,
+                borderRadius: 10, overflow: 'hidden',
+                background: selectedInGroup.length ? color.bg : 'transparent',
+                transition: 'all 0.15s'
+              }}>
+                {/* Header nhóm — phòng ban cha */}
+                <div
+                  onClick={toggleGroup}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '10px 14px', cursor: 'pointer',
+                    borderBottom: children.length ? `1px solid ${selectedInGroup.length ? color.border : 'var(--border)'}` : 'none',
+                    background: selectedInGroup.length ? color.bg : 'var(--surface-2)',
+                  }}
+                >
+                  {allSelected
+                    ? <CheckSquare size={16} color={color.dot} />
+                    : selectedInGroup.length > 0
+                      ? <CheckSquare size={16} color="var(--text-3)" />
+                      : <Square size={16} color="var(--text-3)" />
                   }
-                  <Building2 size={14} color={isSelected ? 'var(--primary)' : 'var(--text-3)'} />
-                  <span style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400 }}>{d.name}</span>
-                  {alreadySent && (
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: color.dot, flexShrink: 0 }} />
+                  <span style={{ fontWeight: 700, fontSize: 13, flex: 1, color: selectedInGroup.length ? color.text : 'var(--text-1)' }}>
+                    {parent.name}
+                  </span>
+                  {selectedInGroup.length > 0 && (
+                    <span style={{
+                      fontSize: 11, background: color.border, color: color.text,
+                      borderRadius: 20, padding: '1px 8px', fontWeight: 700
+                    }}>
+                      {selectedInGroup.length}/{allIds.length}
+                    </span>
+                  )}
+                  {(sendTarget?.assignments || []).some(a => (a.departmentId || a.department?.id) === parent.id) && (
                     <span style={{ fontSize: 11, background: '#f0fdf4', color: 'var(--success)', border: '1px solid #bbf7d0', borderRadius: 20, padding: '1px 8px' }}>
                       Đã gửi
                     </span>
                   )}
                 </div>
 
-                {/* Nút thu hồi riêng từng phòng */}
-                {alreadySent && (
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    style={{ color: 'var(--danger)', fontSize: 11, padding: '2px 8px' }}
-                    onClick={() => handleRevoke([d.id])}
-                    title="Thu hồi"
-                  >
-                    Thu hồi
-                  </button>
+                {/* Phòng ban con */}
+                {children.length > 0 && (
+                  <div style={{ padding: '6px 0' }}>
+                    {children.map(child => {
+                      const isSelected = selectedDepts.includes(child.id);
+                      const alreadySent = (sendTarget?.assignments || []).some(a => (a.departmentId || a.department?.id) === child.id);
+                      return (
+                        <div
+                          key={child.id}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '7px 14px 7px 36px',
+                            background: isSelected ? `${color.bg}99` : 'transparent',
+                          }}
+                        >
+                          <div onClick={() => toggleDept(child.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+                            {isSelected
+                              ? <CheckSquare size={15} color={color.dot} />
+                              : <Square size={15} color="var(--text-3)" />
+                            }
+                            <Building2 size={13} color={isSelected ? color.dot : 'var(--text-3)'} />
+                            <span style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400, color: isSelected ? color.text : 'var(--text-2)' }}>
+                              {child.name}
+                            </span>
+                            {alreadySent && (
+                              <span style={{ fontSize: 11, background: '#f0fdf4', color: 'var(--success)', border: '1px solid #bbf7d0', borderRadius: 20, padding: '1px 8px' }}>
+                                Đã gửi
+                              </span>
+                            )}
+                          </div>
+                          {alreadySent && (
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              style={{ color: 'var(--danger)', fontSize: 11, padding: '2px 8px' }}
+                              onClick={() => handleRevoke([child.id])}
+                            >
+                              Thu hồi
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             );
           })}
         </div>
+
         {sendTarget?.assignments?.length > 0 && (
           <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-            <button
-              className="btn btn-ghost btn-sm"
-              style={{ color: 'var(--danger)' }}
-              onClick={() => handleRevoke([])}
-            >
+            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleRevoke([])}>
               Thu hồi tất cả phòng ban
             </button>
           </div>
@@ -353,6 +571,21 @@ const handleSave = async () => {
                 <option value="monthly">Tháng</option>
                 <option value="quarterly">Quý</option>
                 <option value="yearly">Năm</option>
+              </select>
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Thuộc khối / phòng ban *</label>
+              <select
+                className="form-select"
+                value={form.departmentId}
+                onChange={e => setForm({ ...form, departmentId: e.target.value })}
+              >
+                <option value="">— Chọn khối —</option>
+                {parentDepts.map((parent) => (
+                  <option key={parent.id} value={parent.id}>{parent.name}</option>
+                ))}
               </select>
             </div>
           </div>

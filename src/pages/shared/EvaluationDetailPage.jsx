@@ -45,10 +45,10 @@ const PRINT_STYLE = `
 
 const RATINGS = [
   { range: '95 - 100', rank: 'A' },
-  { range: '86 - 94',  rank: 'B' },
-  { range: '76 - 85',  rank: 'C' },
-  { range: '66 - 75',  rank: 'D' },
-  { range: '< 65',     rank: 'E' },
+  { range: '86 - 94', rank: 'B' },
+  { range: '76 - 85', rank: 'C' },
+  { range: '66 - 75', rank: 'D' },
+  { range: '< 65', rank: 'E' },
 ];
 
 function calcRank(total) {
@@ -57,13 +57,19 @@ function calcRank(total) {
   if (t >= 86) return 'B';
   if (t >= 76) return 'C';
   if (t >= 66) return 'D';
-  if (t > 0)   return 'E';
+  if (t > 0) return 'E';
   return '';
 }
-
+function getTodayFormatted() {
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2, '0');
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const yyyy = now.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
 function fmtDateTime(d) {
   if (!d) return '';
-  return new Date(d).toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  return new Date(d).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 function DocHeader({ period, onPeriodChange, readOnly }) {
@@ -81,7 +87,19 @@ function DocHeader({ period, onPeriodChange, readOnly }) {
             Tháng:&nbsp;
             {readOnly
               ? <strong>{period}</strong>
-              : <input value={period} onChange={e => onPeriodChange(e.target.value)} placeholder="VD: 04/2026" />
+              : <input
+  value={period}
+  onChange={e => {
+    let val = e.target.value.replace(/[^\d/]/g, ''); // chỉ cho nhập số và /
+    // Auto-insert / sau 2 ký tự số
+    if (/^\d{2}$/.test(val) && !val.includes('/')) val = val + '/';
+    // Giới hạn độ dài mm/yyyy = 7 ký tự
+    if (val.length > 7) return;
+    onPeriodChange(val);
+  }}
+  placeholder="mm/yyyy"
+  maxLength={7}
+/>
             }
           </div>
         </div>
@@ -136,44 +154,46 @@ function SigRow({ label, name, datetime }) {
 }
 
 export default function EvaluationDetailPage() {
-  const { id }   = useParams();
+  const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isNew    = id === 'new';
+  const isNew = id === 'new';
 
-  const [ev, setEv]                     = useState(null);
-  const [loading, setLoading]           = useState(!isNew);
-  const [selfScores, setSelfScores]     = useState({});
-  const [selfComment, setSelfComment]   = useState('');
-  const [saving, setSaving]             = useState(false);
+  const [ev, setEv] = useState(null);
+  const [loading, setLoading] = useState(!isNew);
+  const [selfScores, setSelfScores] = useState({});
+  const [selfComment, setSelfComment] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const [evalDate, setEvalDate]         = useState('');
+  const [evalDate, setEvalDate] = useState('');
   const [employeeName, setEmployeeName] = useState('');
-  const [dept, setDept]                 = useState('');
-  const [position, setPosition]         = useState('');
+  const [dept, setDept] = useState('');
+  const [position, setPosition] = useState('');
 
-  const [templates, setTemplates]       = useState([]);
-  const [selectedTpl, setSelectedTpl]   = useState(null);
-  const [period, setPeriod]             = useState('');
-  const [periodType, setPeriodType]     = useState('monthly');
+  const [templates, setTemplates] = useState([]);
+  const [selectedTpl, setSelectedTpl] = useState(null);
+  const [period, setPeriod] = useState('');
+  const [periodType, setPeriodType] = useState('monthly');
 
-  const [reviewModal, setReviewModal]   = useState(null);
-  const [mgrScores, setMgrScores]       = useState({});
-  const [mgrComment, setMgrComment]     = useState('');
-  const [dirComment, setDirComment]     = useState('');
+  const [reviewModal, setReviewModal] = useState(null);
+  const [mgrScores, setMgrScores] = useState({});
+  const [mgrComment, setMgrComment] = useState('');
+  const [mgrRejectReason, setMgrRejectReason] = useState('');   // ← thêm vào đây
+  const [dirComment, setDirComment] = useState('');
   const [rejectReason, setRejectReason] = useState('');
-
+  const [isEditing, setIsEditing] = useState(false);
   useEffect(() => {
-    if (isNew) getTemplates({ isActive: true }).then(r => setTemplates(r.data.data)).catch(() => {});
+    if (isNew) getTemplates({ isActive: true }).then(r => setTemplates(r.data.data)).catch(() => { });
     else loadEval();
   }, [id]); // eslint-disable-line
 
   const loadEval = async () => {
     setLoading(true);
     try {
-      const res  = await getEvaluationById(id);
+      const res = await getEvaluationById(id);
       const data = res.data.data;
       setEv(data);
+      setEvalDate(data.evalDate || '');
       setSelfComment(data.selfComment || '');
       setEmployeeName(data.employee?.fullName || '');
       setDept(data.employee?.department || '');
@@ -201,35 +221,70 @@ export default function EvaluationDetailPage() {
     setEmployeeName(user?.fullName || '');
     setDept(user?.department || '');
     setPosition(user?.position || '');
+    setEvalDate(getTodayFormatted());
   };
-
+const isValidPeriod = (p) => /^\d{1,2}\/\d{4}$/.test(p.trim());
   const handleCreate = async () => {
-    if (!selectedTpl || !period.trim()) return toast.error('Nhập kỳ đánh giá (VD: 04/2026)');
+if (!selectedTpl || !period.trim() || !isValidPeriod(period))
+  return toast.error('Kỳ đánh giá không hợp lệ. Vui lòng nhập đúng định dạng mm/yyyy (VD: 04/2026)');
+    if (!evalDate.trim())
+      return toast.error('Vui lòng nhập ngày đánh giá KPI')
+    if (!employeeName.trim())
+      return toast.error('Vui lòng nhập họ tên nhân sự');
+    if (!dept.trim())
+      return toast.error('Vui lòng nhập phòng ban');
+    if (!position.trim())
+      return toast.error('Vui lòng nhập chức danh');
+
+    // Kiểm tra đã điền điểm tất cả tiêu chí chưa
+    const missing = (selectedTpl.criteria || []).filter(
+      c => selfScores[c.id]?.score === '' || selfScores[c.id]?.score == null
+    );
+    if (missing.length > 0)
+      return toast.error(`Còn ${missing.length} tiêu chí chưa chấm điểm`);
+
     setSaving(true);
     try {
       const scoreArr = Object.entries(selfScores).map(([criteriaId, v]) => ({
         criteriaId, score: parseFloat(v.score) || 0, note: v.note, achievement: v.achievement
       }));
-      const res = await createEvaluation({ templateId: selectedTpl.id, period, periodType, selfComment, scores: scoreArr });
+      const [m, y] = period.split('/');
+const normalizedPeriod = `${parseInt(m)}/${y}`;
+      const res = await createEvaluation({ templateId: selectedTpl.id, period, periodType, selfComment, evalDate, scores: scoreArr });
       toast.success('Tạo đánh giá thành công!');
       navigate(`/evaluation/${res.data.data.id}`);
     } catch (err) { toast.error(err.response?.data?.message || 'Lỗi tạo'); }
     finally { setSaving(false); }
   };
-
-  const handleSaveDraft = async () => {
-    setSaving(true);
-    try {
-      const scoreArr = Object.entries(selfScores).map(([criteriaId, v]) => ({
-        criteriaId, score: parseFloat(v.score) || 0, note: v.note, achievement: v.achievement
-      }));
-      await updateEvaluation(id, { selfComment, scores: scoreArr });
-      toast.success('Đã lưu bản nháp'); loadEval();
-    } catch (err) { toast.error(err.response?.data?.message || 'Lỗi lưu'); }
-    finally { setSaving(false); }
-  };
+const handleSaveDraft = async () => {
+  setSaving(true);
+  try {
+    const scoreArr = criteria.map(c => ({
+      criteriaId: c.id,
+      score: parseFloat(selfScores[c.id]?.score) || 0,
+      note: selfScores[c.id]?.note || '',
+      achievement: selfScores[c.id]?.achievement || ''
+    }));
+    await updateEvaluation(id, { selfComment, scores: scoreArr });
+    toast.success('Đã lưu đánh giá');
+    await loadEval();        // ← thêm lại dòng này
+    setIsEditing(false);     // ← tắt edit sau khi load xong
+  } catch (err) { 
+    toast.error(err.response?.data?.message || 'Lỗi lưu'); 
+  } finally { 
+    setSaving(false); 
+  }
+};
 
   const handleSubmit = async () => {
+    const missing = criteria.filter(
+      c => selfScores[c.id]?.score === '' || selfScores[c.id]?.score == null
+    );
+    if (missing.length > 0)
+      return toast.error(`Còn ${missing.length} tiêu chí chưa chấm điểm`);
+    if (!selfComment.trim())
+      return toast.error('Vui lòng nhập nhận xét của bản thân');
+
     setSaving(true);
     try { await submitEvaluation(id); toast.success('Đã nộp đánh giá!'); loadEval(); }
     catch (err) { toast.error(err.response?.data?.message || 'Lỗi nộp'); }
@@ -246,6 +301,25 @@ export default function EvaluationDetailPage() {
       toast.success('Đã duyệt KPI!'); setReviewModal(null); loadEval();
     } catch (err) { toast.error(err.response?.data?.message || 'Lỗi duyệt'); }
     finally { setSaving(false); }
+  };
+  const handleManagerReject = async () => {
+    if (!mgrRejectReason.trim())
+      return toast.error('Vui lòng nhập lý do từ chối');
+    setSaving(true);
+    try {
+      await managerReview(id, {
+        action: 'reject',
+        managerComment: mgrComment,
+        rejectionReason: mgrRejectReason,
+      });
+      toast.success('Đã từ chối KPI, trả về cho nhân viên');
+      setReviewModal(null);
+      loadEval();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Lỗi từ chối');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDirectorAction = async (action) => {
@@ -323,7 +397,7 @@ export default function EvaluationDetailPage() {
                 <tr>
                   <td className="label-cell">Ngày đánh giá KPI:</td>
                   <td className="data-cell" colSpan={3}>
-                    <input value={evalDate} onChange={e => setEvalDate(e.target.value)} placeholder="dd/mm/yyyy" />
+                    <input value={evalDate} onChange={e => setEvalDate(e.target.value)} placeholder="dd/mm/yyyy" readOnly />
                   </td>
                 </tr>
                 <tr>
@@ -459,16 +533,20 @@ export default function EvaluationDetailPage() {
   }
 
   /* ══ DETAIL VIEW ══ */
-  const canEdit            = ev?.employeeId === user?.id && ['draft', 'rejected'].includes(ev?.status);
-  const canSubmit          = ev?.employeeId === user?.id && ['draft', 'rejected'].includes(ev?.status);
-  const canManagerReview   = (user?.role === 'manager' || user?.role === 'director') && ev?.status === 'submitted';
+  const canEdit = String(ev?.employeeId) === String(user?.id)
+    && ['draft', 'rejected'].includes(ev?.status)
+    && isEditing;
+  const canSubmit = String(ev?.employeeId) === String(user?.id)
+    && ['draft', 'rejected'].includes(ev?.status)
+    && isEditing;
+  const canManagerReview = (user?.role === 'manager' || user?.role === 'director') && ev?.status === 'submitted';
   const canDirectorApprove = user?.role === 'director' && ev?.status === 'manager_reviewed';
 
-  const criteria     = ev?.template?.criteria || [];
-  const totalSelf    = criteria.reduce((s, c) => { const sc = ev?.scores?.find(x => x.criteriaId === c.id); return s + (parseFloat(sc?.selfScore)    || 0); }, 0);
+  const criteria = ev?.template?.criteria || [];
+  const totalSelf = criteria.reduce((s, c) => { const sc = ev?.scores?.find(x => x.criteriaId === c.id); return s + (parseFloat(sc?.selfScore) || 0); }, 0);
   const totalManager = criteria.reduce((s, c) => { const sc = ev?.scores?.find(x => x.criteriaId === c.id); return s + (parseFloat(sc?.managerScore) || 0); }, 0);
-  const totalFinal   = criteria.reduce((s, c) => { const sc = ev?.scores?.find(x => x.criteriaId === c.id); return s + (parseFloat(sc?.finalScore)   || 0); }, 0);
-  const useTotal     = totalFinal > 0 ? totalFinal : totalManager > 0 ? totalManager : totalSelf;
+  const totalFinal = criteria.reduce((s, c) => { const sc = ev?.scores?.find(x => x.criteriaId === c.id); return s + (parseFloat(sc?.finalScore) || 0); }, 0);
+  const useTotal = totalFinal > 0 ? totalFinal : totalManager > 0 ? totalManager : totalSelf;
 
   return (
     <>
@@ -479,9 +557,43 @@ export default function EvaluationDetailPage() {
           actions={<>
             <button className="btn btn-ghost btn-sm" onClick={() => navigate(-1)}><ArrowLeft size={14} /> Quay lại</button>
             <button className="btn btn-ghost btn-sm" onClick={() => window.print()}><Printer size={13} /> In / PDF</button>
-            {canEdit   && <button className="btn btn-secondary btn-sm" onClick={handleSaveDraft} disabled={saving}><Save size={13} /> Lưu nháp</button>}
-            {canSubmit && <button className="btn btn-primary btn-sm" onClick={handleSubmit} disabled={saving}><Send size={13} /> Nộp đánh giá</button>}
-            {canManagerReview   && <button className="btn btn-warning btn-sm" onClick={() => setReviewModal('manager')}><CheckCircle size={13} /> Duyệt KPI</button>}
+
+            {/* Nhân viên - chưa đang chỉnh sửa */}
+            {String(ev?.employeeId) === String(user?.id) && ['draft', 'rejected'].includes(ev?.status) && !isEditing && (
+              <>
+                <button className="btn btn-warning btn-sm" onClick={() => setIsEditing(true)}>
+                  Chỉnh sửa
+                </button>
+                <button className="btn btn-primary btn-sm" onClick={handleSubmit} disabled={saving}>
+                  <Send size={13} /> Nộp đánh giá
+                </button>
+              </>
+            )}
+
+            {/* Nhân viên - đang chỉnh sửa */}
+            {isEditing && (
+              <>
+                <button className="btn btn-ghost btn-sm" onClick={() => { setIsEditing(false); loadEval(); }}>
+                  Hủy
+                </button>
+                <button className="btn btn-primary btn-sm"
+                onClick={handleSaveDraft} disabled={saving}>
+                  <Save size={13} /> {saving ? 'Đang lưu...' : 'Lưu đánh giá'}
+                </button>
+              </>
+            )}
+
+            {/* Manager */}
+            {canManagerReview && <>
+              <button className="btn btn-warning btn-sm" onClick={() => setReviewModal('manager')}>
+                <CheckCircle size={13} /> Duyệt KPI
+              </button>
+              <button className="btn btn-danger btn-sm" onClick={() => setReviewModal('manager_reject')}>
+                <XCircle size={13} /> Từ chối
+              </button>
+            </>}
+
+            {/* Director */}
             {canDirectorApprove && <>
               <button className="btn btn-success btn-sm" onClick={() => setReviewModal('approve')}><CheckCircle size={13} /> Phê duyệt</button>
               <button className="btn btn-danger btn-sm" onClick={() => setReviewModal('reject')}><XCircle size={13} /> Từ chối</button>
@@ -501,7 +613,9 @@ export default function EvaluationDetailPage() {
             <tbody>
               <tr>
                 <td className="label-cell">Ngày đánh giá KPI:</td>
-                <td className="data-cell" colSpan={3}>{ev?.submittedAt ? fmtDateTime(ev.submittedAt) : '—'}</td>
+                <td className="data-cell" colSpan={3}>
+                  {ev?.evalDate || (ev?.submittedAt ? fmtDateTime(ev.submittedAt) : '—')}
+                </td>
               </tr>
               <tr>
                 <td className="label-cell">Họ và tên nhân sự:</td>
@@ -568,7 +682,14 @@ export default function EvaluationDetailPage() {
                       )}
                     </td>
                     <td className="max-score-cell">{c.maxScore}</td>
-                    <td className="self-score-value">{s?.selfScore != null ? parseFloat(s.selfScore).toFixed(1) : '—'}</td>
+                    <td className="self-score-value">
+                      {isEditing
+                        ? (selfScores[c.id]?.score !== '' && selfScores[c.id]?.score != null
+                          ? parseFloat(selfScores[c.id].score).toFixed(1)
+                          : '—')
+                        : (s?.selfScore != null ? parseFloat(s.selfScore).toFixed(1) : '—')
+                      }
+                    </td>
                     <td className="mgr-score-value">{s?.managerScore != null ? parseFloat(s.managerScore).toFixed(1) : '—'}</td>
                     <td className="final-score-value">{s?.finalScore != null ? parseFloat(s.finalScore).toFixed(1) : '—'}</td>
                   </tr>
@@ -577,14 +698,32 @@ export default function EvaluationDetailPage() {
               <tr className="total-row">
                 <td colSpan={2} className="total-label">TỔNG ĐIỂM:</td>
                 <td className="total-max">100</td>
-                <td className="total-self">{totalSelf > 0 ? totalSelf.toFixed(0) : '—'}</td>
+                <td className="total-self">
+                  {isEditing
+                    ? (() => {
+                      const editTotal = criteria.reduce((sum, c) =>
+                        sum + (parseFloat(selfScores[c.id]?.score) || 0), 0);
+                      return editTotal > 0 ? editTotal.toFixed(0) : '—';
+                    })()
+                    : (totalSelf > 0 ? totalSelf.toFixed(0) : '—')
+                  }
+                </td>
                 <td className="total-mgr">{totalManager > 0 ? totalManager.toFixed(0) : '—'}</td>
                 <td className="total-final">{totalFinal > 0 ? totalFinal.toFixed(0) : '—'}</td>
               </tr>
               <tr className="rank-row">
                 <td colSpan={2} className="rank-label">XẾP HẠNG</td>
                 <td></td>
-                <td className="rank-value">{totalSelf > 0 ? calcRank(totalSelf) : '—'}</td>
+                <td className="rank-value">
+                  {isEditing
+                    ? (() => {
+                      const editTotal = criteria.reduce((sum, c) =>
+                        sum + (parseFloat(selfScores[c.id]?.score) || 0), 0);
+                      return editTotal > 0 ? calcRank(editTotal) : '—';
+                    })()
+                    : (totalSelf > 0 ? calcRank(totalSelf) : '—')
+                  }
+                </td>
                 <td className="rank-value">{totalManager > 0 ? calcRank(totalManager) : '—'}</td>
                 <td className="rank-value">{totalFinal > 0 ? calcRank(totalFinal) : '—'}</td>
               </tr>
@@ -714,6 +853,42 @@ export default function EvaluationDetailPage() {
           <textarea className="form-textarea" rows={3} value={mgrComment}
             placeholder="Nhận xét chung về kết quả KPI của nhân viên..."
             onChange={e => setMgrComment(e.target.value)} />
+        </div>
+      </Modal>
+      {/* ── Manager reject modal ── */}
+      <Modal
+        open={reviewModal === 'manager_reject'}
+        onClose={() => setReviewModal(null)}
+        title="Từ chối KPI (Quản lý)"
+        footer={<>
+          <button className="btn btn-secondary" onClick={() => setReviewModal(null)}>Hủy</button>
+          <button className="btn btn-danger" onClick={handleManagerReject} disabled={saving}>
+            <XCircle size={13} /> Từ chối
+          </button>
+        </>}
+      >
+        <div className="alert alert-warning">
+          KPI sẽ bị trả về để nhân viên chỉnh sửa lại.
+        </div>
+        <div className="form-group">
+          <label className="form-label">Lý do từ chối *</label>
+          <textarea
+            className="form-textarea"
+            rows={3}
+            value={mgrRejectReason}
+            onChange={e => setMgrRejectReason(e.target.value)}
+            placeholder="Giải thích lý do từ chối..."
+          />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Nhận xét thêm</label>
+          <textarea
+            className="form-textarea"
+            rows={2}
+            value={mgrComment}
+            onChange={e => setMgrComment(e.target.value)}
+            placeholder="Nhận xét bổ sung (nếu có)..."
+          />
         </div>
       </Modal>
 

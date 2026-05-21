@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import {
-  LayoutDashboard, Users, Building2, FileText, ClipboardCheck,
+  LayoutDashboard, Users, Building2, FileText, FlaskConical ,ClipboardCheck,
   BarChart3, Settings, LogOut, Target, ChevronRight, UserCheck, X, BookOpen,
   BarChart2  // ← thêm vào đây nếu chưa có
 }  from 'lucide-react';
@@ -16,7 +16,7 @@ const navConfig = {
       { to: '/admin/users', icon: Users, label: 'Quản lý User' },
       { to: '/admin/departments', icon: Building2, label: 'Phòng ban' },
       { to: '/admin/kpi-templates', icon: FileText, label: 'Mẫu KPI' },
-      { to: '/admin/exams', icon: FileText, label: 'Đề thi' },
+      { to: '/admin/exams', icon: FlaskConical, label: 'Đề thi' },
       { to: '/admin/exam-results', icon: BarChart2,     label: 'Kết quả đề thi' },
     ]},
     { section: 'KPI', items: [

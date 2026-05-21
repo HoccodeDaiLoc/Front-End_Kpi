@@ -45,7 +45,7 @@ export default function ExamVerifyPage() {
 
   const cfg = {
     loading:     { icon: null,  color: '#3b82f6', title: 'Đang xác thực...',      sub: 'Vui lòng chờ trong giây lát' },
-    redirecting: { icon: '✅',  color: '#16a34a', title: `Xin chào ${userName}!`, sub: 'Đang tải bài thi...' },
+    redirecting: { icon: '✅',  color: '#16a34a', title: `Xin chào bạn nha !`, sub: 'Đang tải bài thi...' },
     expired:     { icon: '⏰',  color: '#f59e0b', title: 'Mã QR đã hết hạn',       sub: 'Quay lại máy tính, nhấn "Làm bài" để tạo mã mới.' },
     error:       { icon: '❌',  color: '#ef4444', title: 'Xác thực thất bại',       sub: message },
   }[status];

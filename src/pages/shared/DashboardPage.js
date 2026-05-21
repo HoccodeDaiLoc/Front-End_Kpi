@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getOverview, getTrend, getMyStats } from '../../api/dashboard';
 import Header from '../../components/layout/Header';
@@ -6,14 +6,11 @@ import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend
 } from 'recharts';
-import { Users, CheckCircle, Clock, TrendingUp, Award, Star, Target } from 'lucide-react';
+import { Users, CheckCircle, Clock, TrendingUp, Award, Star, Target, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import Spinner from '../../components/common/Spinner';
 import './DashboardPage.scss';
 import { formatDate, getScoreLabel, getScoreColor } from '../../utils/helpers';
-/* ── Thang điểm KPI: 0-100, xếp loại A/B/C/D/E ── */
-
-
 
 const RANK_META = {
   A: { color: '#10b981', bg: '#ecfdf5', label: 'Xuất sắc' },
@@ -24,6 +21,23 @@ const RANK_META = {
 };
 
 const PIE_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444'];
+
+// Sinh danh sách 12 tháng gần nhất để chọn
+const generateMonthOptions = () => {
+  const options = [];
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const value = `${year}-${month}`;
+    const label = `Tháng ${month}/${year}`;
+    options.push({ value, label });
+  }
+  return options;
+};
+
+const MONTH_OPTIONS = generateMonthOptions();
 
 /* ── RankBadge ── */
 function RankBadge({ score }) {
@@ -71,10 +85,37 @@ export default function DashboardPage() {
   const [myStats, setMyStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Period filter cho biểu đồ phòng ban
+  const [selectedPeriod, setSelectedPeriod] = useState(''); // '' = tất cả
+  const [deptLoading, setDeptLoading] = useState(false);
+
+  const isAdmin = ['admin', 'director', 'chairman'].includes(user?.role);
+
+  // Convert ISO month to DB format: "2026-05" → "5/2026"
+  const toDbPeriod = (isoMonth) => {
+    if (!isoMonth) return "";
+    const [year, month] = isoMonth.split("-");
+    return `${parseInt(month)}/${year}`;
+  };
+
+  // Load overview với period filter
+  const loadOverview = useCallback(async (period = '') => {
+    setDeptLoading(true);
+    try {
+      const params = period ? { period: toDbPeriod(period) } : {};
+      const o = await getOverview(params);
+      setOverview(o.data.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setDeptLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     const load = async () => {
       try {
-        if (['admin', 'director', 'chairman'].includes(user?.role)) {
+        if (isAdmin) {
           const [o, t] = await Promise.all([getOverview(), getTrend()]);
           setOverview(o.data.data);
           setTrend(t.data.data);
@@ -87,6 +128,29 @@ export default function DashboardPage() {
     load();
   }, [user]);
 
+  // Khi đổi period → reload chỉ overview
+  const handlePeriodChange = (period) => {
+    setSelectedPeriod(period);
+    loadOverview(period);
+  };
+
+  // Navigate tháng trước / sau
+  const navigatePeriod = (dir) => {
+    const currentIdx = MONTH_OPTIONS.findIndex(m => m.value === selectedPeriod);
+    if (dir === 'prev') {
+      const next = currentIdx < MONTH_OPTIONS.length - 1 ? currentIdx + 1 : currentIdx;
+      handlePeriodChange(MONTH_OPTIONS[next].value);
+    } else {
+      if (currentIdx <= 0) {
+        handlePeriodChange('');
+      } else {
+        handlePeriodChange(MONTH_OPTIONS[currentIdx - 1].value);
+      }
+    }
+  };
+
+  const selectedLabel = MONTH_OPTIONS.find(m => m.value === selectedPeriod)?.label || 'Tất cả';
+
   if (loading) return (
     <>
       <Header title="Dashboard" />
@@ -95,11 +159,11 @@ export default function DashboardPage() {
   );
 
   const distData = overview ? [
-    { name: 'A ', value: overview.scoreDistribution?.excellent || 0 },
-    { name: 'B ', value: overview.scoreDistribution?.good || 0 },
-    { name: 'C ', value: overview.scoreDistribution?.fair || 0 },
+    { name: 'A', value: overview.scoreDistribution?.excellent || 0 },
+    { name: 'B', value: overview.scoreDistribution?.good || 0 },
+    { name: 'C', value: overview.scoreDistribution?.fair || 0 },
     { name: 'D', value: overview.scoreDistribution?.average || 0 },
-    { name: 'E ', value: overview.scoreDistribution?.poor || 0 },
+    { name: 'E', value: overview.scoreDistribution?.poor || 0 },
   ].filter(d => d.value > 0) : [];
 
   return (
@@ -115,7 +179,6 @@ export default function DashboardPage() {
             </div>
             <div className="card-body">
               <div className="grid-4">
-
                 <div className="stat-card">
                   <div className="stat-icon" style={{ background: '#eff6ff' }}>
                     <Target size={22} color="var(--primary)" />
@@ -172,10 +235,8 @@ export default function DashboardPage() {
                     <div className="stat-label">Xếp loại gần nhất</div>
                   </div>
                 </div>
-
               </div>
 
-              {/* Xu hướng điểm cá nhân */}
               {myStats.trend?.length > 0 && (
                 <div className="chart-section">
                   <div className="chart-title">Xu hướng điểm KPI của tôi</div>
@@ -199,8 +260,8 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── Tổng quan Admin/Manager/Director ── */}
-      {overview && ['admin', 'director',  'chairman'].includes(user?.role) && (
+        {/* ── Tổng quan Admin/Director/Chairman ── */}
+        {overview && isAdmin && (
           <>
             {/* Summary stats */}
             <div className="grid-4 mb-4">
@@ -244,8 +305,8 @@ export default function DashboardPage() {
                     {overview.summary?.avgScore > 0 && <RankBadge score={overview.summary.avgScore} />}
                   </div>
                   <div className="stat-label">
-  {user?.role === 'director' ? 'Điểm TB phòng ban' : 'Điểm TB toàn công ty'}
-</div>
+                    {user?.role === 'director' ? 'Điểm TB phòng ban' : 'Điểm TB toàn công ty'}
+                  </div>
                 </div>
               </div>
             </div>
@@ -253,25 +314,109 @@ export default function DashboardPage() {
             {/* Charts row */}
             <div className="grid-2 mb-4">
 
-              {/* KPI theo phòng ban */}
+              {/* ── KPI theo phòng ban + bộ lọc tháng ── */}
               <div className="card">
-                <div className="card-header">
-                  <div className="card-title">KPI theo phòng ban</div>
-                </div>
-                <div className="card-body chart-body">
-                  <ResponsiveContainer width="100%" height={260}>
-                    <BarChart
-                      data={overview.departmentStats?.slice(0, 8)}
-                      layout="vertical"
-                      margin={{ left: 10, right: 20 }}
+                <div className="card-header" style={{ alignItems: 'center' }}>
+                  <div className="card-title" style={{ flex: 1 }}>KPI theo phòng ban</div>
+
+                  {/* Period selector */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <button
+                      onClick={() => navigatePeriod('prev')}
+                      disabled={MONTH_OPTIONS.findIndex(m => m.value === selectedPeriod) >= MONTH_OPTIONS.length - 1}
+                      style={{
+                        width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)',
+                        background: 'var(--surface-2)', cursor: 'pointer', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', color: 'var(--text-2)',
+                        opacity: MONTH_OPTIONS.findIndex(m => m.value === selectedPeriod) >= MONTH_OPTIONS.length - 1 ? 0.4 : 1
+                      }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                      <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} tickCount={6} />
-                      <YAxis type="category" dataKey="department" width={110} tick={{ fontSize: 11 }} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="avgScore" fill="var(--primary-light)" radius={4} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                      <ChevronLeft size={14} />
+                    </button>
+
+                    <select
+                      value={selectedPeriod}
+                      onChange={e => handlePeriodChange(e.target.value)}
+                      style={{
+                        fontSize: 12, padding: '4px 8px', borderRadius: 6,
+                        border: '1px solid var(--border)', background: selectedPeriod ? '#eff6ff' : 'var(--surface-2)',
+                        color: selectedPeriod ? 'var(--primary)' : 'var(--text-2)',
+                        fontWeight: selectedPeriod ? 700 : 400, cursor: 'pointer',
+                        outline: 'none', minWidth: 110
+                      }}
+                    >
+                      <option value="">Tất cả</option>
+                      {MONTH_OPTIONS.map(m => (
+                        <option key={m.value} value={m.value}>{m.label}</option>
+                      ))}
+                    </select>
+
+                    <button
+                      onClick={() => navigatePeriod('next')}
+                      disabled={!selectedPeriod}
+                      style={{
+                        width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)',
+                        background: 'var(--surface-2)', cursor: 'pointer', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', color: 'var(--text-2)',
+                        opacity: !selectedPeriod ? 0.4 : 1
+                      }}
+                    >
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="card-body chart-body" style={{ position: 'relative', minHeight: 280 }}>
+                  {deptLoading && (
+                    <div style={{
+                      position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      borderRadius: 8, zIndex: 2
+                    }}>
+                      <Spinner />
+                    </div>
+                  )}
+
+                  {/* Label tháng đang xem */}
+                  {selectedPeriod && (
+                    <div style={{
+                      fontSize: 11, color: 'var(--primary)', fontWeight: 600,
+                      marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4
+                    }}>
+                      <span style={{
+                        background: '#eff6ff', border: '1px solid #bfdbfe',
+                        borderRadius: 20, padding: '2px 10px'
+                      }}>
+                        {selectedLabel}
+                      </span>
+                      <button
+                        onClick={() => handlePeriodChange('')}
+                        style={{ fontSize: 11, color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                      >
+                        × Xóa lọc
+                      </button>
+                    </div>
+                  )}
+
+                  {overview.departmentStats?.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={260}>
+                      <BarChart
+                        data={overview.departmentStats.slice(0, 8)}
+                        layout="vertical"
+                        margin={{ left: 10, right: 20 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                        <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} tickCount={6} />
+                        <YAxis type="category" dataKey="department" width={110} tick={{ fontSize: 11 }} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Bar dataKey="avgScore" fill="var(--primary-light)" radius={4} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="chart-empty" style={{ paddingTop: 60 }}>
+                      {selectedPeriod ? `Không có dữ liệu cho ${selectedLabel}` : 'Chưa có dữ liệu'}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -279,6 +424,14 @@ export default function DashboardPage() {
               <div className="card">
                 <div className="card-header">
                   <div className="card-title">Phân bố xếp loại</div>
+                  {selectedPeriod && (
+                    <span style={{
+                      fontSize: 11, background: '#eff6ff', color: 'var(--primary)',
+                      border: '1px solid #bfdbfe', borderRadius: 20, padding: '2px 10px', fontWeight: 600
+                    }}>
+                      {selectedLabel}
+                    </span>
+                  )}
                 </div>
                 <div className="card-body chart-body">
                   {distData.length > 0 ? (
@@ -334,6 +487,14 @@ export default function DashboardPage() {
               <div className="card">
                 <div className="card-header">
                   <div className="card-title">🏆 Top nhân viên</div>
+                  {selectedPeriod && (
+                    <span style={{
+                      fontSize: 11, background: '#eff6ff', color: 'var(--primary)',
+                      border: '1px solid #bfdbfe', borderRadius: 20, padding: '2px 10px', fontWeight: 600
+                    }}>
+                      {selectedLabel}
+                    </span>
+                  )}
                 </div>
                 <div className="table-wrap">
                   <table className="table">
@@ -367,7 +528,6 @@ export default function DashboardPage() {
                   </table>
                 </div>
               </div>
-
             )}
           </>
         )}
