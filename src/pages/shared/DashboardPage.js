@@ -7,7 +7,7 @@ import {
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { Users, CheckCircle, Clock, TrendingUp, Award, Star, Target, ChevronLeft, ChevronRight } from 'lucide-react';
-
+import { getDepartments } from '../../api/departments';
 import Spinner from '../../components/common/Spinner';
 import './DashboardPage.scss';
 import { formatDate, getScoreLabel, getScoreColor } from '../../utils/helpers';
@@ -90,13 +90,16 @@ export default function DashboardPage() {
   const [deptLoading, setDeptLoading] = useState(false);
 
   const isAdmin = ['admin', 'director', 'chairman'].includes(user?.role);
-
+  const isDirector = user?.role === 'director';
+  const isTopAdmin = ['admin', 'chairman'].includes(user?.role);
+  const [depts, setDepts] = useState([]);
   // Convert ISO month to DB format: "2026-05" → "5/2026"
   const toDbPeriod = (isoMonth) => {
     if (!isoMonth) return "";
     const [year, month] = isoMonth.split("-");
     return `${parseInt(month)}/${year}`;
   };
+
 
   // Load overview với period filter
   const loadOverview = useCallback(async (period = '') => {
@@ -126,6 +129,7 @@ export default function DashboardPage() {
       setLoading(false);
     };
     load();
+    getDepartments().then(r => setDepts(r.data.data)).catch(() => { }); // ← thêm dòng này
   }, [user]);
 
   // Khi đổi period → reload chỉ overview
@@ -157,6 +161,14 @@ export default function DashboardPage() {
       <div className="page-content"><Spinner center /></div>
     </>
   );
+  // Thêm hàm này cạnh groupByParent
+  const filterChildOnly = (stats) => {
+    if (!stats?.length || !depts.length) return stats || [];
+    return stats.filter(s => {
+      const dept = depts.find(d => d.name?.trim() === s.department?.trim());
+      return dept?.parentId != null; // chỉ giữ phòng con
+    });
+  };
 
   const distData = overview ? [
     { name: 'A', value: overview.scoreDistribution?.excellent || 0 },
@@ -165,7 +177,26 @@ export default function DashboardPage() {
     { name: 'D', value: overview.scoreDistribution?.average || 0 },
     { name: 'E', value: overview.scoreDistribution?.poor || 0 },
   ].filter(d => d.value > 0) : [];
+  const groupByParent = (stats) => {
+    if (!stats?.length || !depts.length) return stats || [];
+    const result = {};
+    stats.forEach(s => {
+      const dept = depts.find(d => d.name?.trim() === s.department?.trim());
+      const parentId = dept?.parentId;
+      const parent = parentId ? depts.find(d => d.id === parentId) : dept;
+      const groupName = parent?.name || s.department;
+      if (!result[groupName]) result[groupName] = { total: 0, count: 0 };
+      result[groupName].total += s.avgScore * s.count;
+      result[groupName].count += s.count;
+    });
+    return Object.entries(result).map(([department, v]) => ({
+      department,
+      avgScore: Math.round((v.total / v.count) * 100) / 100,
+      count: v.count
+    })).sort((a, b) => b.avgScore - a.avgScore);
+  };
 
+  console.log('role:', user?.role, 'isTopAdmin:', isTopAdmin, 'isDirector:', isDirector);
   return (
     <>
       <Header title="Dashboard" subtitle={`Xin chào, ${user?.fullName || user?.email} 👋`} />
@@ -401,7 +432,13 @@ export default function DashboardPage() {
                   {overview.departmentStats?.length > 0 ? (
                     <ResponsiveContainer width="100%" height={260}>
                       <BarChart
-                        data={overview.departmentStats.slice(0, 8)}
+                        data={(
+                          isTopAdmin
+                            ? groupByParent(overview.departmentStats)
+                            : isDirector
+                              ? filterChildOnly(overview.departmentStats)  // ← chỉ phòng con
+                              : overview.departmentStats
+                        )?.slice(0, 8)}
                         layout="vertical"
                         margin={{ left: 10, right: 20 }}
                       >

@@ -40,10 +40,15 @@ export default function KpiTemplatesPage() {
   const [selectedDepts, setSelectedDepts] = useState([]);
   const [sending, setSending] = useState(false);
 
-  useEffect(() => {
-    load();
-    getDepartments().then(r => setDepts(r.data.data)).catch(() => { });
-  }, []);
+useEffect(() => {
+  load();
+  getDepartments().then(r => {
+    const data = r.data.data;
+    setDepts(data);
+  }).catch((err) => { 
+    console.error('getDepartments ERROR:', err);
+  });
+}, []);
 
   const load = async () => {
     setLoading(true);
@@ -54,12 +59,13 @@ export default function KpiTemplatesPage() {
 
   // ── Tính nhóm phòng ban cha ──────────────────────────────────────────────
   const parentDepts = depts.filter(d => !d.parentId);
-
+const getChildren = (parentId) => 
+  depts.filter(d => d.parentId != null && String(d.parentId) === String(parentId));
   // Lấy tất cả departmentId (cả cha lẫn con) thuộc một nhóm cha
-  const getDeptIdsInGroup = (parentId) => {
-    const children = depts.filter(d => d.parentId === parentId).map(d => d.id);
-    return [parentId, ...children];
-  };
+const getDeptIdsInGroup = (parentId) => {
+  const children = getChildren(parentId).map(d => d.id);
+  return [parentId, ...children];
+};
 
   // Lọc template theo nhóm đang chọn — dựa vào departmentId của template
   const filteredTemplates = templates.filter(t => {
@@ -317,7 +323,9 @@ export default function KpiTemplatesPage() {
                               const color = GROUP_COLORS[idx % GROUP_COLORS.length];
                               const sentDeptIds = t.assignments.map(a => a.departmentId || a.department?.id).filter(Boolean);
                               // Các phòng CON của khối này đã được gửi
-                              const sentChildren = depts.filter(d => d.parentId === parent.id && sentDeptIds.includes(d.id));
+                              const sentChildren = depts.filter(d => 
+  String(d.parentId) === String(parent.id) && sentDeptIds.includes(d.id)
+);
                               const parentSent = sentDeptIds.includes(parent.id);
                               if (!parentSent && !sentChildren.length) return null;
                               // Tên hiển thị bên phải mũi tên
@@ -434,7 +442,7 @@ export default function KpiTemplatesPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 420, overflowY: 'auto' }}>
           {parentDepts.map((parent, idx) => {
             const color = GROUP_COLORS[idx % GROUP_COLORS.length];
-            const children = depts.filter(d => d.parentId === parent.id);
+            const children = getChildren(parent.id); 
             const allDepts = [parent, ...children];
             const allIds = allDepts.map(d => d.id);
             const selectedInGroup = allIds.filter(id => selectedDepts.includes(id));
@@ -451,9 +459,12 @@ export default function KpiTemplatesPage() {
             return (
               <div key={parent.id} style={{
                 border: `1.5px solid ${selectedInGroup.length ? color.border : 'var(--border)'}`,
-                borderRadius: 10, overflow: 'hidden',
-                background: selectedInGroup.length ? color.bg : 'transparent',
-                transition: 'all 0.15s'
+                borderRadius: 10, 
+                background: 'var(--surface-1)', 
+                transition: 'all 0.15s',
+                position: 'relative',       
+                 zIndex: 0,  
+                  marginBottom: 4,
               }}>
                 {/* Header nhóm — phòng ban cha */}
                 <div
@@ -492,7 +503,7 @@ export default function KpiTemplatesPage() {
 
                 {/* Phòng ban con */}
                 {children.length > 0 && (
-                  <div style={{ padding: '6px 0' }}>
+                  <div style={{ padding: '6px 0' ,background: selectedInGroup.length ? color.bg : 'var(--surface-1)',}}>
                     {children.map(child => {
                       const isSelected = selectedDepts.includes(child.id);
                       const alreadySent = (sendTarget?.assignments || []).some(a => (a.departmentId || a.department?.id) === child.id);
@@ -502,7 +513,7 @@ export default function KpiTemplatesPage() {
                           style={{
                             display: 'flex', alignItems: 'center', gap: 10,
                             padding: '7px 14px 7px 36px',
-                            background: isSelected ? `${color.bg}99` : 'transparent',
+                             background: isSelected ? `${color.bg}99` : 'var(--surface-1)',
                           }}
                         >
                           <div onClick={() => toggleDept(child.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>

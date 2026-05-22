@@ -5,6 +5,8 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, R
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getScoreColor, getScoreLabel } from '../../utils/helpers';
+import { useAuth } from '../../context/AuthContext';
+import { getDepartments } from '../../api/departments';
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444'];
 
@@ -35,7 +37,10 @@ export default function ReportsPage() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(true);
   const [overviewLoading, setOverviewLoading] = useState(false);
-
+  const { user } = useAuth();
+  const [depts, setDepts] = useState([]);
+  const isTopAdmin = ['admin', 'chairman'].includes(user?.role);
+  const isDirector = user?.role === 'director';
   // Bộ lọc tháng
   const [selectedMonth, setSelectedMonth] = useState(''); // '' = tất cả
 
@@ -58,10 +63,9 @@ export default function ReportsPage() {
     try {
       const t = await getTrend({ year });
       setTrend(t.data.data);
-    } catch {}
+    } catch { }
   }, [year]);
 
-  // Load lần đầu
   useEffect(() => {
     const init = async () => {
       setLoading(true);
@@ -69,6 +73,7 @@ export default function ReportsPage() {
       setLoading(false);
     };
     init();
+    getDepartments().then(r => setDepts(r.data.data)).catch(() => { }); // ← thêm
   }, []);
 
   // Khi đổi năm → reload trend
@@ -171,7 +176,38 @@ export default function ReportsPage() {
       {selectedLabel}
     </span>
   ) : null;
+  const groupByParent = (stats) => {
+    if (!stats?.length || !depts.length) return stats || [];
+    const result = {};
+    stats.forEach(s => {
+      const dept = depts.find(d => d.name?.trim() === s.department?.trim());
+      const parentId = dept?.parentId;
+      const parent = parentId ? depts.find(d => d.id === parentId) : dept;
+      const groupName = parent?.name || s.department;
+      if (!result[groupName]) result[groupName] = { total: 0, count: 0 };
+      result[groupName].total += s.avgScore * s.count;
+      result[groupName].count += s.count;
+    });
+    return Object.entries(result).map(([department, v]) => ({
+      department,
+      avgScore: Math.round((v.total / v.count) * 100) / 100,
+      count: v.count
+    })).sort((a, b) => b.avgScore - a.avgScore);
+  };
 
+  const filterChildOnly = (stats) => {
+    if (!stats?.length || !depts.length) return stats || [];
+    return stats.filter(s => {
+      const dept = depts.find(d => d.name?.trim() === s.department?.trim());
+      return dept?.parentId != null;
+    });
+  };
+
+  const chartData = isTopAdmin
+    ? groupByParent(overview?.departmentStats)
+    : isDirector
+      ? filterChildOnly(overview?.departmentStats)
+      : overview?.departmentStats || [];
   return (
     <>
       <Header
@@ -218,9 +254,9 @@ export default function ReportsPage() {
                   <MonthBadge />
                 </div>
                 <div className="card-body">
-                  {overview.departmentStats?.length > 0 ? (
+                  {chartData?.length > 0 ? (
                     <ResponsiveContainer width="100%" height={280}>
-                      <BarChart data={overview.departmentStats} margin={{ left: 0 }}>
+                      <BarChart data={chartData} margin={{ left: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                         <XAxis dataKey="department" tick={{ fontSize: 11 }} />
                         <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
@@ -232,7 +268,7 @@ export default function ReportsPage() {
                           </div>
                         ) : null} />
                         <Bar dataKey="avgScore" radius={[6, 6, 0, 0]}>
-                          {overview.departmentStats?.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                          {chartData?.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
