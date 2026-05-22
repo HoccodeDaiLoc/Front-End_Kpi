@@ -93,7 +93,8 @@ export default function DashboardPage() {
   const isDirector = user?.role === 'director';
   const isTopAdmin = ['admin', 'chairman'].includes(user?.role);
   const [depts, setDepts] = useState([]);
-  // Convert ISO month to DB format: "2026-05" → "5/2026"
+  const isMobile = window.innerWidth <= 768;
+
   const toDbPeriod = (isoMonth) => {
     if (!isoMonth) return "";
     const [year, month] = isoMonth.split("-");
@@ -268,25 +269,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {myStats.trend?.length > 0 && (
-                <div className="chart-section">
-                  <div className="chart-title">Xu hướng điểm KPI của tôi</div>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <LineChart data={myStats.trend}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                      <XAxis dataKey="period" tick={{ fontSize: 11 }} />
-                      <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} tickCount={6} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Line
-                        type="monotone" dataKey="finalScore"
-                        stroke="var(--primary)" strokeWidth={2.5}
-                        dot={{ r: 4, fill: 'var(--primary)' }}
-                        name="Điểm cuối"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
+         
             </div>
           </div>
         )}
@@ -341,7 +324,29 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-
+ {myStats?.trend?.length > 0 && (
+              <div className="card mb-4">
+                <div className="card-header">
+                  <div className="card-title">Xu hướng điểm KPI của tôi</div>
+                </div>
+                <div className="card-body chart-body">
+                  <ResponsiveContainer width="100%" height={200}>
+                    <LineChart data={myStats.trend}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis dataKey="period" tick={{ fontSize: 11 }} />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} tickCount={6} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Line
+                        type="monotone" dataKey="finalScore"
+                        stroke="var(--primary)" strokeWidth={2.5}
+                        dot={{ r: 4, fill: 'var(--primary)' }}
+                        name="Điểm cuối"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
             {/* Charts row */}
             <div className="grid-2 mb-4">
 
@@ -440,11 +445,11 @@ export default function DashboardPage() {
                               : overview.departmentStats
                         )?.slice(0, 8)}
                         layout="vertical"
-                        margin={{ left: 10, right: 20 }}
+                        margin={{ left: isMobile ? 0 : 10, right: isMobile ? 8 : 20 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                         <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} tickCount={6} />
-                        <YAxis type="category" dataKey="department" width={110} tick={{ fontSize: 11 }} />
+                        <YAxis type="category" dataKey="department" width={isMobile ? 55 : 110}tick={{ fontSize: 11 }} />
                         <Tooltip content={<CustomTooltip />} />
                         <Bar dataKey="avgScore" fill="var(--primary-light)" radius={4} />
                       </BarChart>
@@ -499,7 +504,7 @@ export default function DashboardPage() {
             {trend.length > 0 && (
               <div className="card mb-4">
                 <div className="card-header">
-                  <div className="card-title">Xu hướng KPI theo tháng</div>
+                  <div className="card-title">Xu hướng KPI phòng ban theo tháng</div>
                 </div>
                 <div className="card-body">
                   <ResponsiveContainer width="100%" height={220}>
@@ -545,7 +550,7 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {overview.topEmployees.slice(0, 10).map((e, i) => (
+                      {overview.topEmployees.slice(0, 3).map((e, i) => (
                         <tr key={i} className={i < 3 ? 'top-row' : ''}>
                           <td>
                             <span className={`rank-num rank-num--${i < 3 ? i + 1 : 'default'}`}>

@@ -15,6 +15,7 @@ import {
   CircleX,
   KeyRound
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; 
 const TYPE_ICONS = {
   evaluation_submitted: <BarChart3 size={18} />,
   evaluation_reviewed: <CircleCheckBig size={18} />,
@@ -25,6 +26,7 @@ const TYPE_ICONS = {
 };
 
 export default function NotificationsPage() {
+  const navigate = useNavigate();
   const { setUnreadCount } = useNotifications(); // ← thêm dòng này
   const [notifs, setNotifs] = useState([]);
   const [unread, setUnread] = useState(0);
@@ -74,8 +76,13 @@ export default function NotificationsPage() {
               <Bell size={40} style={{ opacity: .2, marginBottom: 12 }} /><br />Chưa có thông báo nào
             </div></div>
           ) : notifs.map(n => (
-            <div key={n.id} onClick={() => !n.isRead && handleRead(n.id)}
-              style={{ background: n.isRead ? 'var(--surface)' : '#eff6ff', borderRadius: 10, border: `1px solid ${n.isRead ? 'var(--border)' : '#bfdbfe'}`, padding: '14px 16px', marginBottom: 8, display: 'flex', alignItems: 'flex-start', gap: 12, cursor: n.isRead ? 'default' : 'pointer', transition: 'background .2s' }}>
+            <div key={n.id} onClick={() => {
+  if (!n.isRead) handleRead(n.id);
+  if (n.relatedId && n.type !== 'system') {
+    navigate(`/evaluation/${n.relatedId}`);
+  }
+}}
+              style={{ background: n.isRead ? 'var(--surface)' : '#eff6ff', borderRadius: 10, border: `1px solid ${n.isRead ? 'var(--border)' : '#bfdbfe'}`, padding: '14px 16px', marginBottom: 8, display: 'flex', alignItems: 'flex-start', gap: 12, cursor: (n.relatedId && n.type !== 'system') ? 'pointer' : 'default', transition: 'background .2s' }}>
               <div
                 style={{
                   width: 40,

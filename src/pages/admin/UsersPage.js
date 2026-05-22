@@ -10,6 +10,7 @@ import { RoleBadge } from '../../components/common/Badge';
 import { formatDate, getRoleLabel } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 import { Plus, Search, Edit2, Trash2, Mail } from 'lucide-react';
+import './UsersPage.scss';
 
 const ROLES = ['employee', 'manager', 'director', 'admin', 'chairman'];
 
@@ -214,7 +215,7 @@ export default function UsersPage() {
       <Header title="Quản lý User" subtitle={`${pagination.total} tài khoản`}
         actions={<button className="btn btn-primary btn-sm" onClick={openCreate}><Plus size={14} /> Thêm user</button>} />
 
-      <div className="page-content">
+      <div className="page-content users-page">
         <div className="card">
           <div className="card-header">
             <div className="filter-bar" style={{ margin: 0 }}>

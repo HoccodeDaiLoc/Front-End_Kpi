@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { getScoreColor, getScoreLabel } from '../../utils/helpers';
 import { useAuth } from '../../context/AuthContext';
 import { getDepartments } from '../../api/departments';
+import './ReportsPage.scss';
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444'];
 
@@ -231,7 +232,7 @@ export default function ReportsPage() {
         }
       />
 
-      <div className="page-content">
+      <div className="page-content reports-page">
         {loading
           ? <div className="loading-page"><div className="spinner spinner-lg" /></div>
           : !overview ? null : (
@@ -354,7 +355,7 @@ export default function ReportsPage() {
               {overview.topEmployees?.length > 0 && (
                 <div className="card">
                   <div className="card-header">
-                    <div className="card-title">🏆 Top 10 Nhân viên xuất sắc</div>
+                    <div className="card-title">🏆 Top 3 Nhân viên xuất sắc</div>
                     <MonthBadge />
                   </div>
                   <div className="table-wrap">
@@ -363,7 +364,7 @@ export default function ReportsPage() {
                         <tr><th>Hạng</th><th>Nhân viên</th><th>Phòng ban</th><th>Chức vụ</th><th>Kỳ</th><th>Điểm</th><th>Xếp loại</th></tr>
                       </thead>
                       <tbody>
-                        {overview.topEmployees.map((e, i) => (
+                        {overview.topEmployees.slice(0, 3).map((e, i) => (
                           <tr key={i}>
                             <td>
                               <div style={{

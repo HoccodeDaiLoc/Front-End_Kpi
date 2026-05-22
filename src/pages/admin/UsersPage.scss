@@ -1,0 +1,104 @@
+.users-page {
+
+  @media (max-width: 768px) {
+
+    .card-header {
+      padding: 10px 12px;
+
+      .filter-bar {
+        flex-direction: row !important;
+        gap: 8px;
+        width: 100%;
+        align-items: center;
+
+        div:first-child {
+          flex: 1;
+          input.form-input { width: 100% !important; }
+        }
+
+        select.form-select {
+          flex: 0 0 130px !important;
+          width: 130px !important;
+        }
+      }
+    }
+
+    .table-wrap {
+      padding: 0 10px 12px;
+ overflow-x: auto;                    // ← thêm dòng này
+  -webkit-overflow-scrolling: touch;  
+      table {
+        display: block;
+        border: none;
+
+        thead { display: none; }
+
+        tbody {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        tr {
+          display: grid;
+          grid-template-columns: 1fr auto auto;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 12px;
+          border-radius: 8px;
+          border: 0.5px solid var(--border);
+          background: var(--bg-card, #fff);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        td:nth-child(1) {
+          min-width: 0;
+
+          div:first-child {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-1);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .text-muted { display: none; }
+        }
+
+        td:nth-child(2) {
+          .badge {
+            font-size: 11px !important;
+            padding: 3px 8px !important;
+            white-space: nowrap;
+          }
+        }
+
+        td:nth-child(3) { display: none; }
+        td:nth-child(4) { display: none; }
+        td:nth-child(5) { display: none; }
+        td:nth-child(6) { display: none; }
+
+        td:nth-child(7) {
+          .flex { gap: 4px !important; }
+
+          .btn-icon {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 8px !important;
+            border: 0.5px solid var(--border) !important;
+            background: var(--surface-2) !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            &[style*="danger"] {
+              background: #fef2f2 !important;
+              border-color: #fca5a5 !important;
+            }
+          }
+        }
+      }
+    }
+  }
+}

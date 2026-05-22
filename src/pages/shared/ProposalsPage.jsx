@@ -524,8 +524,7 @@ export default function ProposalsPage() {
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {filtered.map(p => {
-    console.log('p.created_by:', p.created_by, '| user.id:', user?.id, '| role:', user?.role);
-     console.log('user full:', JSON.stringify(user));
+   
     return (
     <div key={p.id} className="card" style={{ padding: '16px 20px' }}>
                                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>

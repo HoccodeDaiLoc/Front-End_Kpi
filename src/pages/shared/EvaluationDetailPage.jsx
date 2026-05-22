@@ -72,7 +72,7 @@ function fmtDateTime(d) {
   return new Date(d).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function DocHeader({ period, onPeriodChange, readOnly }) {
+function DocHeader({ period, onPeriodChange, readOnly, highlightPeriod }) {
   return (
     <>
       <div className="eval-doc-header">
@@ -88,6 +88,7 @@ function DocHeader({ period, onPeriodChange, readOnly }) {
             {readOnly
               ? <strong>{period}</strong>
               : <input
+              className={highlightPeriod ? 'field-required' : ''}
   value={period}
   onChange={e => {
     let val = e.target.value.replace(/[^\d/]/g, ''); // chỉ cho nhập số và /
@@ -390,7 +391,7 @@ const handleSaveDraft = async () => {
 
         <div className="page-content">
           <div className="eval-document">
-            <DocHeader period={period} onPeriodChange={setPeriod} readOnly={false} />
+            <DocHeader period={period} onPeriodChange={setPeriod} readOnly={false} highlightPeriod={!isValidPeriod(period)} />
 
             <table className="eval-info-table">
               <tbody>
@@ -447,9 +448,10 @@ const handleSaveDraft = async () => {
                     <td className="max-score-cell">{c.maxScore}</td>
                     {/* FIX 1: dùng selfScores thay vì mgrScores */}
                     <td className="self-score-cell">
-                      <input type="number" min={0} max={c.maxScore} step={1}
-                        value={selfScores[c.id]?.score ?? ''}
-                        placeholder="—"
+                    <input type="number" min={0} max={c.maxScore} step={1}
+  className={selfScores[c.id]?.score === '' || selfScores[c.id]?.score == null ? 'field-required' : ''}
+  value={selfScores[c.id]?.score ?? ''}
+  placeholder="—"
                         onChange={e => {
                           const val = e.target.value;
                           if (val === '' || parseFloat(val) <= c.maxScore) {
@@ -491,7 +493,11 @@ const handleSaveDraft = async () => {
                 <tr>
                   <td colSpan={2} className="comment-cell">
                     <div className="comment-title">Người đánh giá tự nhận xét:</div>
-                    <textarea value={selfComment} onChange={e => setSelfComment(e.target.value)} placeholder="Nhập nhận xét..." />
+                    <textarea
+  className={!selfComment.trim() ? 'field-required' : ''}
+  value={selfComment}
+  onChange={e => setSelfComment(e.target.value)}
+  placeholder="Nhập nhận xét..." />
                   </td>
                 </tr>
                 <tr>

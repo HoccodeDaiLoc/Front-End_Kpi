@@ -323,26 +323,30 @@ code, .mono { font-family: 'JetBrains Mono', monospace; }
   font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 99px;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
-  /* Sidebar được xử lý bởi Sidebar.scss (dùng left: -260px / sidebar--open) */
-  /* KHÔNG dùng transform ở đây để tránh xung đột */
+  .app-layout {
+    margin-left: 0 !important;
+  }
 
   .main-content {
     margin-left: 0 !important;
     width: 100% !important;
+    padding-bottom: 70px; /* ← đẩy content lên trên bottom nav */
   }
 
-  .app-layout {
-    margin-left: 0 !important;
+  .page-content {
+    padding: 16px 12px !important;
   }
 
   .grid-4, .grid-3 { grid-template-columns: 1fr 1fr; }
   .grid-2 { grid-template-columns: 1fr; }
   .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  
 }
 
 @media (max-width: 480px) {
-  .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
-  .page-content { padding: 16px; }
+  .page-content {
+    padding: 12px 10px !important;
+  }
+  
 }

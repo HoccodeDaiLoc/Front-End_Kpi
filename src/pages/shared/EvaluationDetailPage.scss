@@ -909,80 +909,174 @@ $z-index-tooltip: 1060;
     &::placeholder { color: #cbd5e1; }
   }
 }
-
 @media (max-width: 768px) {
-  /* ── Doc header 3 cột → xếp dọc (chỉ khi không in) ── */
-  @media not print {
-    .eval-doc-header {
-      flex-direction: column !important;
-      align-items: center !important;
-      text-align: center;
-      gap: 10px;
+
+  // ── Header document: 3 cột ngang, thu nhỏ cho mobile ──
+  .eval-doc-header {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 4px !important;
+    margin-bottom: 6px;
+
+    .logo-left {
+      flex-shrink: 0;
+      img {
+        height: 32px !important;
+        width: auto;
+        max-width: 70px;
+        object-fit: contain;
+      }
     }
 
-    .logo-left img {
-      max-width: 120px;
+    .title-center {
+      flex: 1;
+      padding: 0 4px;
+      min-width: 0;
+
+      .main-title {
+        font-size: 9px !important;
+        letter-spacing: 0 !important;
+        line-height: 1.2;
+      }
+      .subtitle {
+        font-size: 7.5px !important;
+        line-height: 1.2;
+      }
+      .company-en {
+        font-size: 7px !important;
+      }
+      .period-input {
+        font-size: 9px !important;
+        margin-top: 2px;
+        input {
+          width: 70px !important;
+          font-size: 9px !important;
+        }
+      }
     }
 
     .logo-right {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .logo-right img {
-      max-width: 60px;
-      height: auto;
+      flex-shrink: 0;
+      display: flex !important;
+      gap: 2px !important;
+      align-items: center;
+      img {
+        height: 24px !important;
+        width: auto !important;
+        max-width: 40px !important;
+        object-fit: contain;
+      }
     }
   }
-  .main-title {
-    font-size: 16px !important;
-  }  
 
-  /* ── Bảng info (Họ tên, phòng ban...) scroll ngang ── */
+  // ── eval-document padding thu hẹp ─────────────────────
+  .eval-document {
+    padding: 14px 10px !important;
+  }
+
+  // ── Ghi chú italic ────────────────────────────────────
+  .eval-note,
+  .eval-note-small {
+    font-size: 10px !important;
+  }
+
+  // ── Bảng info + KPI + comment: scroll ngang ───────────
   .eval-info-table,
   .kpi-score-table,
   .comment-table,
   .rating-table {
-    display: block;
-    overflow-x: auto;
+    display: block !important;
+    overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
-    width: 100%;
+    width: 100% !important;
   }
 
-  /* ── Bảng KPI score thu gọn ── */
+  // ── label-cell bớt cứng width ─────────────────────────
+  .label-cell {
+    width: 120px !important;
+    font-size: 11px !important;
+    white-space: normal !important;
+  }
+
+  .data-cell {
+    font-size: 11px !important;
+  }
+
+  // ── KPI score table: giữ cột, chỉ thu nhỏ font/padding
   .kpi-score-table th,
   .kpi-score-table td {
     font-size: 11px !important;
-    padding: 6px 6px !important;
+    padding: 5px 5px !important;
   }
 
   .stt-col, .stt-cell {
-    width: 28px !important;
-    min-width: 28px !important;
+    width: 26px !important;
+    min-width: 26px !important;
   }
 
-  .max-score-col,
-  .max-score-cell {
-    width: 50px !important;
-    min-width: 50px !important;
+  .max-score-col, .max-score-cell {
+    width: 46px !important;
+    min-width: 46px !important;
   }
 
   .self-col, .mgr-col,
   .self-score-cell, .mgr-score-cell,
   .self-score-value, .mgr-score-value,
   .final-score-value {
-    width: 55px !important;
-    min-width: 55px !important;
+    width: 50px !important;
+    min-width: 50px !important;
   }
 
-  /* ── Page content padding ── */
+  // ── Comment table ──────────────────────────────────────
+  .comment-table td {
+    font-size: 11px !important;
+  }
+
+  .final-rank-value {
+    font-size: 16px !important;
+  }
+
+  .rating-table-container {
+    width: 100% !important;
+
+    .rating-table,
+    .rating-table.rating-table--full {
+      display: table !important;   // ← quan trọng, override display:block
+      width: 100% !important;
+      table-layout: fixed !important;
+
+      th, td {
+        width: 50% !important;
+      }
+    }
+  }
+  .kpi-score-table {
+    // override display:block về table để full width
+    display: table !important;
+    width: 100% !important;
+    overflow-x: auto !important;  // vẫn scroll nếu tràn
+  }
+
+  // bọc thêm div scroll nếu cần
+  .eval-document {
+    overflow-x: hidden;
+  }
+
+
+  // ── Footer ────────────────────────────────────────────
+  .eval-footer {
+    font-size: 9px !important;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  // ── Page content padding ──────────────────────────────
   .page-content {
-    padding: 12px 8px !important;
+    padding: 8px 6px !important;
   }
 
-  /* ── Modal full screen ── */
+  // ── Modal full screen từ dưới lên ─────────────────────
   .modal-overlay {
     align-items: flex-end;
     padding: 0;
@@ -994,13 +1088,45 @@ $z-index-tooltip: 1060;
     max-height: 90vh;
   }
 
-  /* ── Review score items ── */
+  // ── Review score items ────────────────────────────────
   .review-score-item {
     padding: 10px !important;
   }
 
   .review-item-inputs {
-    flex-direction: column !important;
-    gap: 8px;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  // ── Header actions: 3 nút layout đẹp ─────────────────
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start !important;
+
+    .btn-ghost.btn-sm,
+    .btn-secondary.btn-sm {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .btn-primary.btn-sm {
+      width: 100%;
+      justify-content: center;
+      order: 99;
+    }
+  }
+}
+.eval-document {
+  input.field-required,
+  textarea.field-required {
+    border: 2px solid #f59e0b !important;
+    border-radius: 4px !important;
+    background-color: #fffbeb !important;
+
+    &:focus {
+      border-color: #d97706 !important;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
+      outline: none !important;
+    }
   }
 }
