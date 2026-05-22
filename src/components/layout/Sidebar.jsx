@@ -17,7 +17,7 @@ const navConfig = {
   { section: 'Quản trị', items: [
     { to: '/admin/users', icon: Users, label: 'Quản lý User' },
     { to: '/admin/departments', icon: Building2, label: 'Phòng ban' },
-    { to: '/admin/kpi-templates', icon: FileText, label: 'Mẫu KPI' },
+  
   ]},
   { section: 'Kiểm tra', items: [
     { to: '/admin/exams', icon: FlaskConical, label: 'Đề thi' },
@@ -26,6 +26,7 @@ const navConfig = {
   { section: 'KPI', items: [
     { to: '/admin/evaluations', icon: ClipboardCheck, label: 'Danh sách đánh giá' },
     { to: '/admin/reports', icon: BarChart3, label: 'Báo cáo' },
+      { to: '/admin/kpi-templates', icon: FileText, label: 'Mẫu KPI' },
   ]},
   { section: 'Khảo sát', items: [
   { to: '/proposals', icon: Mailbox, label: 'Quản lý khảo sát' },
@@ -87,7 +88,7 @@ employee: [
       { to: '/employee/evaluations', icon: ClipboardCheck, label: 'Đánh giá KPI' },
       { to: '/my-exams', icon: BookOpen, label: 'Bài kiểm tra' },
     ]},
-    // ✅ Thêm mục khảo sát cho employee
+
     { section: 'Khảo sát', items: [
       { to: '/my-proposals', icon: Vote, label: 'Khảo sát của tôi' },
     ]},
