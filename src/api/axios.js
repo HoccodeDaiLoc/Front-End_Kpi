@@ -16,7 +16,13 @@ api.interceptors.response.use(
   res => res,
   err => {
     if (err.response?.status === 401) {
-      // Nếu là mobile session thì KHÔNG redirect về login
+      // ← Bỏ qua nếu đang gọi login API
+      const isLoginRequest = err.config?.url?.includes('/auth/login');
+      
+      if (isLoginRequest) {
+        return Promise.reject(err);  // ← để catch trong handleSubmit tự xử lý
+      }
+
       if (sessionStorage.getItem('exam_mobile_token')) {
         sessionStorage.removeItem('exam_mobile_token');
         sessionStorage.removeItem('exam_mobile_submission');
