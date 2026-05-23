@@ -1,45 +1,50 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import ReactApexChart from 'react-apexcharts';
 import { useAuth } from '../../context/AuthContext';
 import { getOverview, getTrend, getMyStats } from '../../api/dashboard';
 import Header from '../../components/layout/Header';
-import {
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend
-} from 'recharts';
-import { Users, CheckCircle, Clock, TrendingUp, Award, Star, Target, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getDepartments } from '../../api/departments';
 import Spinner from '../../components/common/Spinner';
+import {
+  Users, CheckCircle, Clock, Award,
+  TrendingUp, Star, Target, ChevronLeft,
+  ChevronRight, X
+} from 'lucide-react';
 import './DashboardPage.scss';
 import { formatDate, getScoreLabel, getScoreColor } from '../../utils/helpers';
 
+/* ─── constants ─────────────────────────────────────────── */
 const RANK_META = {
-  A: { color: '#10b981', bg: '#ecfdf5', label: 'Xuất sắc' },
-  B: { color: '#3b82f6', bg: '#eff6ff', label: 'Tốt' },
-  C: { color: '#f59e0b', bg: '#fffbeb', label: 'Khá' },
-  D: { color: '#f97316', bg: '#fff7ed', label: 'Trung bình' },
-  E: { color: '#ef4444', bg: '#fef2f2', label: 'Kém' },
+  A: { color: '#00D4A0', bg: 'rgba(0,212,160,0.15)',   label: 'Xuất sắc'  },
+  B: { color: '#E8192C', bg: 'rgba(232,25,44,0.15)',   label: 'Tốt'       },
+  C: { color: '#F4A623', bg: 'rgba(244,166,35,0.15)',  label: 'Khá'       },
+  D: { color: '#F472B6', bg: 'rgba(244,114,182,0.15)', label: 'Trung bình'},
+  E: { color: '#A78BFA', bg: 'rgba(167,139,250,0.15)', label: 'Kém'       },
 };
 
-const PIE_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444'];
+const DEPT_COLORS = [
+  '#E8192C', '#7C8FFF', '#00D4A0', '#F4A623',
+  '#F472B6', '#FF6B7A', '#38BDF8', '#A78BFA',
+];
 
-// Sinh danh sách 12 tháng gần nhất để chọn
+const PIE_COLORS = [
+  '#00D4A0', '#E8192C', '#F4A623', '#F472B6', '#A78BFA',
+];
+
 const generateMonthOptions = () => {
-  const options = [];
-  const now = new Date();
+  const opts = [];
+  const now  = new Date();
   for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const year = d.getFullYear();
+    const d     = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const year  = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
-    const value = `${year}-${month}`;
-    const label = `Tháng ${month}/${year}`;
-    options.push({ value, label });
+    opts.push({ value: `${year}-${month}`, label: `Tháng ${month}/${year}` });
   }
-  return options;
+  return opts;
 };
-
 const MONTH_OPTIONS = generateMonthOptions();
 
-/* ── RankBadge ── */
+/* ─── tiny helpers ───────────────────────────────────────── */
 function RankBadge({ score }) {
   const rank = getScoreLabel(score);
   const meta = RANK_META[rank];
@@ -51,9 +56,9 @@ function RankBadge({ score }) {
   );
 }
 
-/* ── ScoreCell ── */
 function ScoreCell({ score }) {
-  if (score == null || score === '' || parseFloat(score) === 0) return <span className="no-score">—</span>;
+  if (score == null || score === '' || parseFloat(score) === 0)
+    return <span className="no-score">—</span>;
   return (
     <span className="score-cell">
       <span className="score-num" style={{ color: getScoreColor(score) }}>
@@ -64,60 +69,98 @@ function ScoreCell({ score }) {
   );
 }
 
-/* ── Custom Tooltip ── */
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  const val = payload[0]?.value;
+/* ─── Gauge (pure SVG) ───────────────────────────────────── */
+function GaugeChart({ value = 0, max = 100 }) {
+  const pct      = Math.min(Math.max(value / max, 0), 1);
+  const angleRad = Math.PI * (1 - pct);
+  const rank     = getScoreLabel(value);
+  const meta     = RANK_META[rank] || {};
+  const needleX  = 80 + 58 * Math.cos(angleRad);
+  const needleY  = 82 - 58 * Math.sin(angleRad);
+
   return (
-    <div className="chart-tooltip">
-      <div className="tooltip-label">{label}</div>
-      <div className="tooltip-value" style={{ color: getScoreColor(val) }}>
-        {val?.toFixed(1)} <RankBadge score={val} />
-      </div>
+    <div className="gauge-container">
+      <svg viewBox="0 0 160 90" className="gauge-svg">
+        <defs>
+          <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stopColor="#E8192C" />
+            <stop offset="33%"  stopColor="#F4A623" />
+            <stop offset="66%"  stopColor="#00D4A0" />
+            <stop offset="100%" stopColor="#7C8FFF" />
+          </linearGradient>
+        </defs>
+        <path d="M 14 82 A 66 66 0 0 1 146 82"
+          fill="none" stroke="rgba(0,0,0,0.08)"
+          strokeWidth="12" strokeLinecap="round" />
+        <path d="M 14 82 A 66 66 0 0 1 146 82"
+          fill="none" stroke="url(#gaugeGrad)"
+          strokeWidth="12" strokeLinecap="round"
+          strokeDasharray={`${pct * 207} 207`} />
+        <line x1="80" y1="82" x2={needleX} y2={needleY}
+          stroke="#E8192C" strokeWidth="2.5" strokeLinecap="round" className="gauge-needle-line" />
+        <circle cx="80" cy="82" r="5"   fill="rgba(232,25,44,0.15)" stroke="#E8192C" strokeWidth="1.5" />
+        <circle cx="80" cy="82" r="2.5" fill="#E8192C" className="gauge-needle-center" />
+        <text x="10"  y="90" fill="rgba(0,0,0,0.25)" fontSize="8">0</text>
+        <text x="75"  y="16" fill="rgba(0,0,0,0.25)" fontSize="8">50</text>
+        <text x="143" y="90" fill="rgba(0,0,0,0.25)" fontSize="8">100</text>
+      </svg>
+      <div className="gauge-value">{value?.toFixed(1)}</div>
+      {meta.color && (
+        <span className="gauge-rank"
+          style={{ color: meta.color, background: meta.bg, borderColor: `${meta.color}44` }}>
+          {rank} — {meta.label}
+        </span>
+      )}
     </div>
   );
-};
+}
 
+/* ═══════════════════════════════════════════════════════════
+   MAIN PAGE
+══════════════════════════════════════════════════════════════ */
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user }   = useAuth();
   const [overview, setOverview] = useState(null);
-  const [trend, setTrend] = useState([]);
-  const [myStats, setMyStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [trend,    setTrend]    = useState([]);
+  const [myStats,  setMyStats]  = useState(null);
+  const [loading,  setLoading]  = useState(true);
+  const [depts,    setDepts]    = useState([]);
 
-  // Period filter cho biểu đồ phòng ban
-  const [selectedPeriod, setSelectedPeriod] = useState(''); // '' = tất cả
-  const [deptLoading, setDeptLoading] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [deptLoading,    setDeptLoading]    = useState(false);
 
-  const isAdmin = ['admin', 'director', 'chairman'].includes(user?.role);
+  /* detect mobile once at mount (≤480px) */
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth <= 480
+  );
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= 480);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
+  const isAdmin    = ['admin','director','chairman','executive'].includes(user?.role);
   const isDirector = user?.role === 'director';
-  const isTopAdmin = ['admin', 'chairman'].includes(user?.role);
-  const [depts, setDepts] = useState([]);
-  const isMobile = window.innerWidth <= 768;
+  const isTopAdmin = ['admin','chairman','executive'].includes(user?.role);
 
-  const toDbPeriod = (isoMonth) => {
-    if (!isoMonth) return "";
-    const [year, month] = isoMonth.split("-");
-    return `${parseInt(month)}/${year}`;
+  const toDbPeriod = (iso) => {
+    if (!iso) return '';
+    const [y, m] = iso.split('-');
+    return `${parseInt(m)}/${y}`;
   };
 
-
-  // Load overview với period filter
   const loadOverview = useCallback(async (period = '') => {
     setDeptLoading(true);
     try {
       const params = period ? { period: toDbPeriod(period) } : {};
       const o = await getOverview(params);
       setOverview(o.data.data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setDeptLoading(false);
-    }
+    } catch (e) { console.error(e); }
+    finally { setDeptLoading(false); }
   }, []);
 
   useEffect(() => {
-    const load = async () => {
+    (async () => {
       try {
         if (isAdmin) {
           const [o, t] = await Promise.all([getOverview(), getTrend()]);
@@ -128,452 +171,447 @@ export default function DashboardPage() {
         setMyStats(ms.data.data);
       } catch (e) { console.error(e); }
       setLoading(false);
-    };
-    load();
-    getDepartments().then(r => setDepts(r.data.data)).catch(() => { }); // ← thêm dòng này
+    })();
+    getDepartments().then(r => setDepts(r.data.data)).catch(() => {});
   }, [user]);
 
-  // Khi đổi period → reload chỉ overview
   const handlePeriodChange = (period) => {
     setSelectedPeriod(period);
     loadOverview(period);
   };
 
-  // Navigate tháng trước / sau
   const navigatePeriod = (dir) => {
-    const currentIdx = MONTH_OPTIONS.findIndex(m => m.value === selectedPeriod);
+    const idx = MONTH_OPTIONS.findIndex(m => m.value === selectedPeriod);
     if (dir === 'prev') {
-      const next = currentIdx < MONTH_OPTIONS.length - 1 ? currentIdx + 1 : currentIdx;
+      const next = idx < MONTH_OPTIONS.length - 1 ? idx + 1 : idx;
       handlePeriodChange(MONTH_OPTIONS[next].value);
     } else {
-      if (currentIdx <= 0) {
-        handlePeriodChange('');
-      } else {
-        handlePeriodChange(MONTH_OPTIONS[currentIdx - 1].value);
-      }
+      if (idx <= 0) handlePeriodChange('');
+      else handlePeriodChange(MONTH_OPTIONS[idx - 1].value);
     }
   };
 
   const selectedLabel = MONTH_OPTIONS.find(m => m.value === selectedPeriod)?.label || 'Tất cả';
 
+  /* ── group/filter helpers ── */
+  const filterChildOnly = (stats) => {
+    if (!stats?.length || !depts.length) return stats || [];
+    return stats.filter(s => {
+      const dept = depts.find(d => d.name?.trim() === s.department?.trim());
+      return dept?.parentId != null;
+    });
+  };
+
+  const groupByParent = (stats) => {
+    if (!stats?.length || !depts.length) return stats || [];
+    const res = {};
+    stats.forEach(s => {
+      const dept     = depts.find(d => d.name?.trim() === s.department?.trim());
+      const parentId = dept?.parentId;
+      const parent   = parentId ? depts.find(d => d.id === parentId) : dept;
+      const name     = parent?.name || s.department;
+      if (!res[name]) res[name] = { total: 0, count: 0 };
+      res[name].total += s.avgScore * s.count;
+      res[name].count += s.count;
+    });
+    return Object.entries(res).map(([department, v]) => ({
+      department,
+      avgScore: Math.round((v.total / v.count) * 100) / 100,
+      count: v.count,
+    })).sort((a, b) => b.avgScore - a.avgScore);
+  };
+
+  const deptStats = overview
+    ? (isTopAdmin
+        ? groupByParent(overview.departmentStats)
+        : isDirector
+          ? filterChildOnly(overview.departmentStats)
+          : overview.departmentStats
+      )?.slice(0, 8)
+    : [];
+
+  /* ─── ApexCharts configs ─────────────────────────────── */
+
+  /* 1. Area – trend cá nhân */
+  const myTrendOpts = {
+    chart: { type: 'area', toolbar: { show: false }, animations: { enabled: true, speed: 800 }, background: 'transparent' },
+    stroke: { curve: 'smooth', width: 2.5 },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.02,
+        stops: [0, 95],
+        colorStops: [
+          { offset: 0,  color: '#E8192C', opacity: 0.45 },
+          { offset: 95, color: '#E8192C', opacity: 0.02 },
+        ],
+      },
+    },
+    colors: ['#E8192C'],
+    markers: { size: 4, colors: ['#E8192C'], strokeColors: '#1e1b4b', strokeWidth: 2 },
+    xaxis: {
+      categories: myStats?.trend?.map(t => t.period) || [],
+      labels: { style: { colors: 'rgba(0,0,0,0.35)', fontSize: '11px' } },
+      axisBorder: { show: false }, axisTicks: { show: false },
+    },
+    yaxis: {
+      min: 0, max: 100, tickAmount: 5,
+      labels: { style: { colors: 'rgba(0,0,0,0.35)', fontSize: '11px' } },
+    },
+    grid: { borderColor: 'rgba(0,0,0,0.06)', strokeDashArray: 4 },
+    tooltip: { theme: 'light', y: { formatter: v => `${v} điểm` } },
+    legend: { show: false },
+    dataLabels: { enabled: false },
+  };
+
+  /* 2. Horizontal bar – KPI phòng ban */
+  const barOpts = {
+    chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true, speed: 600 }, background: 'transparent' },
+    plotOptions: {
+      bar: { horizontal: true, borderRadius: 6, barHeight: '60%', distributed: true },
+    },
+    colors: DEPT_COLORS,
+    dataLabels: {
+      enabled: true,
+      formatter: v => v,
+      style: { fontSize: '11px', colors: ['#fff'], fontWeight: 500 },
+      offsetX: -4,
+    },
+    xaxis: {
+      min: 0, max: 100,
+      categories: deptStats?.map(d => d.department) || [],
+      labels: { style: { colors: 'rgba(0,0,0,0.35)', fontSize: '11px' } },
+      axisBorder: { show: false }, axisTicks: { show: false },
+    },
+    yaxis: { labels: { style: { colors: 'rgba(0,0,0,0.55)', fontSize: '11px' }, maxWidth: 110 } },
+    grid: { borderColor: 'rgba(0,0,0,0.06)', xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
+    tooltip: { theme: 'light', y: { formatter: v => `${v} điểm` } },
+    legend: { show: false },
+  };
+
+  /* 3. Donut – phân bố xếp loại */
+  const distData = overview ? [
+    overview.scoreDistribution?.excellent || 0,
+    overview.scoreDistribution?.good      || 0,
+    overview.scoreDistribution?.fair      || 0,
+    overview.scoreDistribution?.average   || 0,
+    overview.scoreDistribution?.poor      || 0,
+  ] : [];
+
+  const donutOpts = {
+    chart: { type: 'donut', animations: { enabled: true, speed: 700 }, background: 'transparent' },
+    colors: PIE_COLORS,
+    labels: ['A – Xuất sắc', 'B – Tốt', 'C – Khá', 'D – Trung bình', 'E – Kém'],
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '70%',
+          labels: {
+            show: true,
+            total: {
+              show: true, label: 'Tổng',
+              color: 'rgba(0,0,0,0.4)', fontSize: '12px',
+              formatter: (w) => w.globals.seriesTotals.reduce((a, b) => a + b, 0),
+            },
+            value: { color: '#111827', fontSize: '22px', fontWeight: 500 },
+          },
+        },
+      },
+    },
+    dataLabels: { enabled: false },
+    legend: {
+      show: !isMobile,
+      position: 'bottom',
+      fontSize: '11px',
+      labels: { colors: 'rgba(0,0,0,0.55)' },
+      markers: { width: 8, height: 8, radius: 4 },
+      itemMargin: { horizontal: 8 },
+    },
+    stroke: { width: 0 },
+    tooltip: { theme: 'light' },
+  };
+
+  /* 4. Area – trend toàn công ty */
+  const companyTrendOpts = {
+    chart: { type: 'area', toolbar: { show: false }, animations: { speed: 800 }, background: 'transparent' },
+    stroke: { curve: 'smooth', width: 2.5 },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        colorStops: [
+          { offset: 0,  color: '#E8192C', opacity: 0.4  },
+          { offset: 90, color: '#E8192C', opacity: 0.02 },
+        ],
+      },
+    },
+    colors: ['#E8192C'],
+    markers: { size: 4, colors: ['#E8192C'], strokeColors: '#0f172a', strokeWidth: 2 },
+    xaxis: {
+      categories: trend.map(t => t.period),
+      labels: { style: { colors: 'rgba(0,0,0,0.35)', fontSize: '11px' } },
+      axisBorder: { show: false }, axisTicks: { show: false },
+    },
+    yaxis: {
+      min: 0, max: 100, tickAmount: 5,
+      labels: { style: { colors: 'rgba(0,0,0,0.35)', fontSize: '11px' } },
+    },
+    grid: { borderColor: 'rgba(0,0,0,0.06)', strokeDashArray: 4 },
+    tooltip: { theme: 'light', y: { formatter: v => `${v} điểm` } },
+    legend: { show: false },
+    dataLabels: { enabled: false },
+  };
+
+  /* ─── render ─────────────────────────────────────────── */
   if (loading) return (
     <>
       <Header title="Dashboard" />
       <div className="page-content"><Spinner center /></div>
     </>
   );
-  // Thêm hàm này cạnh groupByParent
-  const filterChildOnly = (stats) => {
-    if (!stats?.length || !depts.length) return stats || [];
-    return stats.filter(s => {
-      const dept = depts.find(d => d.name?.trim() === s.department?.trim());
-      return dept?.parentId != null; // chỉ giữ phòng con
-    });
-  };
 
-  const distData = overview ? [
-    { name: 'A', value: overview.scoreDistribution?.excellent || 0 },
-    { name: 'B', value: overview.scoreDistribution?.good || 0 },
-    { name: 'C', value: overview.scoreDistribution?.fair || 0 },
-    { name: 'D', value: overview.scoreDistribution?.average || 0 },
-    { name: 'E', value: overview.scoreDistribution?.poor || 0 },
-  ].filter(d => d.value > 0) : [];
-  const groupByParent = (stats) => {
-    if (!stats?.length || !depts.length) return stats || [];
-    const result = {};
-    stats.forEach(s => {
-      const dept = depts.find(d => d.name?.trim() === s.department?.trim());
-      const parentId = dept?.parentId;
-      const parent = parentId ? depts.find(d => d.id === parentId) : dept;
-      const groupName = parent?.name || s.department;
-      if (!result[groupName]) result[groupName] = { total: 0, count: 0 };
-      result[groupName].total += s.avgScore * s.count;
-      result[groupName].count += s.count;
-    });
-    return Object.entries(result).map(([department, v]) => ({
-      department,
-      avgScore: Math.round((v.total / v.count) * 100) / 100,
-      count: v.count
-    })).sort((a, b) => b.avgScore - a.avgScore);
-  };
+  const avatarInitials = (name) =>
+    name ? name.split(' ').map(w => w[0]).slice(-2).join('').toUpperCase() : '??';
 
-  console.log('role:', user?.role, 'isTopAdmin:', isTopAdmin, 'isDirector:', isDirector);
   return (
-    <>
-      <Header title="Dashboard" subtitle={`Xin chào, ${user?.fullName || user?.email} 👋`} />
-      <div className="page-content dashboard-page">
+    <div className="db-root">
+      <Header
+        title="Dashboard"
+        subtitle={`Xin chào, ${user?.fullName || user?.email} 👋`}
+      />
 
-        {/* ── Thống kê của tôi ── */}
+      <div className="db-page">
+
+        {/* ══ MY STATS ══ */}
         {myStats && (
-          <div className="card mb-4">
-            <div className="card-header">
-              <div className="card-title">Thống kê của tôi</div>
+          <section className="db-section">
+            <div className="section-label">Thống kê của tôi</div>
+            <div className="stat-grid">
+              <StatCard icon={<Target size={18} />}    color="red"
+                value={myStats.totalEvaluations}        label="Đánh giá đã làm" />
+              <StatCard icon={<Award size={18} />}     color="teal"
+                value={<>{myStats.avgScore?.toFixed(1) || '—'}{myStats.avgScore > 0 && <RankBadge score={myStats.avgScore} />}</>}
+                label="Điểm TB của tôi" />
+              <StatCard icon={<Star size={18} />}      color="amber"
+                value={<>{myStats.latestScore != null ? Number(myStats.latestScore).toFixed(1) : '—'}{myStats.latestScore > 0 && <RankBadge score={myStats.latestScore} />}</>}
+                label="Điểm gần nhất" />
+              <StatCard icon={<TrendingUp size={18} />} color="indigo"
+                value={myStats.latestScore > 0 ? getScoreLabel(myStats.latestScore) : '—'}
+                label={myStats.latestScore > 0 ? RANK_META[getScoreLabel(myStats.latestScore)]?.label : 'Xếp loại'} />
             </div>
-            <div className="card-body">
-              <div className="grid-4">
-                <div className="stat-card">
-                  <div className="stat-icon" style={{ background: '#eff6ff' }}>
-                    <Target size={22} color="var(--primary)" />
-                  </div>
-                  <div>
-                    <div className="stat-value">{myStats.totalEvaluations}</div>
-                    <div className="stat-label">Đánh giá đã làm</div>
-                  </div>
-                </div>
 
-                <div className="stat-card">
-                  <div className="stat-icon" style={{ background: '#f0fdf4' }}>
-                    <Award size={22} color="#10b981" />
-                  </div>
-                  <div>
-                    <div className="stat-value" style={{ color: getScoreColor(myStats.avgScore) }}>
-                      {myStats.avgScore?.toFixed(1) || '—'}
-                      {myStats.avgScore > 0 && <RankBadge score={myStats.avgScore} />}
-                    </div>
-                    <div className="stat-label">Điểm TB của tôi</div>
-                  </div>
+            {myStats?.trend?.length > 0 && (
+              <div className="glass-card mt-12">
+                <div className="card-head">
+                  <span className="card-title">Xu hướng điểm KPI của tôi</span>
                 </div>
-
-                <div className="stat-card">
-                  <div className="stat-icon" style={{ background: '#fffbeb' }}>
-                    <Star size={22} color="#f59e0b" />
-                  </div>
-                  <div>
-                    <div className="stat-value" style={{ color: getScoreColor(myStats.latestScore) }}>
-                      {myStats.latestScore != null ? Number(myStats.latestScore).toFixed(1) : '—'}
-                      {myStats.latestScore > 0 && <RankBadge score={myStats.latestScore} />}
-                    </div>
-                    <div className="stat-label">Điểm gần nhất</div>
-                  </div>
-                </div>
-
-                <div className="stat-card">
-                  <div className="stat-icon" style={{ background: '#fdf4ff' }}>
-                    <TrendingUp size={22} color="#a855f7" />
-                  </div>
-                  <div>
-                    <div className="stat-value">
-                      {myStats.latestScore > 0 ? (
-                        <>
-                          <span style={{ color: getScoreColor(myStats.latestScore) }}>
-                            {getScoreLabel(myStats.latestScore)}
-                          </span>
-                          <span className="rank-desc">
-                            {RANK_META[getScoreLabel(myStats.latestScore)]?.label}
-                          </span>
-                        </>
-                      ) : '—'}
-                    </div>
-                    <div className="stat-label">Xếp loại gần nhất</div>
-                  </div>
+                <div className="chart-wrap">
+                  <ReactApexChart
+                    type="area"
+                    options={myTrendOpts}
+                    series={[{ name: 'Điểm cuối', data: myStats.trend.map(t => t.finalScore) }]}
+                    height={180}
+                  />
                 </div>
               </div>
-
-         
-            </div>
-          </div>
+            )}
+          </section>
         )}
 
-        {/* ── Tổng quan Admin/Director/Chairman ── */}
+        {/* ══ ADMIN OVERVIEW ══ */}
         {overview && isAdmin && (
           <>
             {/* Summary stats */}
-            <div className="grid-4 mb-4">
-              <div className="stat-card">
-                <div className="stat-icon" style={{ background: '#eff6ff' }}>
-                  <Users size={22} color="var(--primary)" />
-                </div>
-                <div>
-                  <div className="stat-value">{overview.summary?.totalUsers}</div>
-                  <div className="stat-label">Tổng nhân viên</div>
-                </div>
+            <section className="db-section">
+              <div className="section-label">Tổng quan</div>
+              <div className="stat-grid">
+                <StatCard icon={<Users size={18} />}       color="red"
+                  value={overview.summary?.totalUsers}      label="Tổng nhân viên" />
+                <StatCard icon={<CheckCircle size={18} />} color="teal"
+                  value={overview.summary?.approvedEvals}   label="KPI đã duyệt" />
+                <StatCard icon={<Clock size={18} />}       color="amber"
+                  value={overview.summary?.pendingEvals}    label="Chờ xử lý" />
+                <StatCard icon={<Award size={18} />}       color="indigo"
+                  value={<>{overview.summary?.avgScore?.toFixed(1)}{overview.summary?.avgScore > 0 && <RankBadge score={overview.summary.avgScore} />}</>}
+                  label={isDirector ? 'Điểm TB phòng ban' : 'Điểm TB toàn công ty'} />
               </div>
+            </section>
 
-              <div className="stat-card">
-                <div className="stat-icon" style={{ background: '#f0fdf4' }}>
-                  <CheckCircle size={22} color="#10b981" />
-                </div>
-                <div>
-                  <div className="stat-value">{overview.summary?.approvedEvals}</div>
-                  <div className="stat-label">KPI đã duyệt</div>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon" style={{ background: '#fffbeb' }}>
-                  <Clock size={22} color="#f59e0b" />
-                </div>
-                <div>
-                  <div className="stat-value">{overview.summary?.pendingEvals}</div>
-                  <div className="stat-label">Chờ xử lý</div>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon" style={{ background: '#fdf4ff' }}>
-                  <Award size={22} color="#a855f7" />
-                </div>
-                <div>
-                  <div className="stat-value" style={{ color: getScoreColor(overview.summary?.avgScore) }}>
-                    {overview.summary?.avgScore?.toFixed(1)}
-                    {overview.summary?.avgScore > 0 && <RankBadge score={overview.summary.avgScore} />}
-                  </div>
-                  <div className="stat-label">
-                    {user?.role === 'director' ? 'Điểm TB phòng ban' : 'Điểm TB toàn công ty'}
-                  </div>
-                </div>
-              </div>
-            </div>
- {myStats?.trend?.length > 0 && (
-              <div className="card mb-4">
-                <div className="card-header">
-                  <div className="card-title">Xu hướng điểm KPI của tôi</div>
-                </div>
-                <div className="card-body chart-body">
-                  <ResponsiveContainer width="100%" height={200}>
-                    <LineChart data={myStats.trend}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                      <XAxis dataKey="period" tick={{ fontSize: 11 }} />
-                      <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} tickCount={6} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Line
-                        type="monotone" dataKey="finalScore"
-                        stroke="var(--primary)" strokeWidth={2.5}
-                        dot={{ r: 4, fill: 'var(--primary)' }}
-                        name="Điểm cuối"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
-            {/* Charts row */}
-            <div className="grid-2 mb-4">
-
-              {/* ── KPI theo phòng ban + bộ lọc tháng ── */}
-              <div className="card">
-                <div className="card-header" style={{ alignItems: 'center' }}>
-                  <div className="card-title" style={{ flex: 1 }}>KPI theo phòng ban</div>
-
-                  {/* Period selector */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <button
-                      onClick={() => navigatePeriod('prev')}
-                      disabled={MONTH_OPTIONS.findIndex(m => m.value === selectedPeriod) >= MONTH_OPTIONS.length - 1}
-                      style={{
-                        width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)',
-                        background: 'var(--surface-2)', cursor: 'pointer', display: 'flex',
-                        alignItems: 'center', justifyContent: 'center', color: 'var(--text-2)',
-                        opacity: MONTH_OPTIONS.findIndex(m => m.value === selectedPeriod) >= MONTH_OPTIONS.length - 1 ? 0.4 : 1
-                      }}
-                    >
-                      <ChevronLeft size={14} />
-                    </button>
-
-                    <select
-                      value={selectedPeriod}
-                      onChange={e => handlePeriodChange(e.target.value)}
-                      style={{
-                        fontSize: 12, padding: '4px 8px', borderRadius: 6,
-                        border: '1px solid var(--border)', background: selectedPeriod ? '#eff6ff' : 'var(--surface-2)',
-                        color: selectedPeriod ? 'var(--primary)' : 'var(--text-2)',
-                        fontWeight: selectedPeriod ? 700 : 400, cursor: 'pointer',
-                        outline: 'none', minWidth: 110
-                      }}
-                    >
-                      <option value="">Tất cả</option>
-                      {MONTH_OPTIONS.map(m => (
-                        <option key={m.value} value={m.value}>{m.label}</option>
-                      ))}
-                    </select>
-
-                    <button
-                      onClick={() => navigatePeriod('next')}
-                      disabled={!selectedPeriod}
-                      style={{
-                        width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)',
-                        background: 'var(--surface-2)', cursor: 'pointer', display: 'flex',
-                        alignItems: 'center', justifyContent: 'center', color: 'var(--text-2)',
-                        opacity: !selectedPeriod ? 0.4 : 1
-                      }}
-                    >
-                      <ChevronRight size={14} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="card-body chart-body" style={{ position: 'relative', minHeight: 280 }}>
-                  {deptLoading && (
-                    <div style={{
-                      position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      borderRadius: 8, zIndex: 2
-                    }}>
-                      <Spinner />
+            {/* Gauge + Donut — 2 cột (desktop & mobile) */}
+            <section className="db-section">
+              <div className="cards-row-2">
+                <div className="glass-card glass-card--red">
+                  <div className="card-head">
+                    <div>
+                      <div className="card-title">Điểm trung bình</div>
+                      <div className="card-sub">Toàn công ty</div>
                     </div>
-                  )}
+                    {selectedPeriod && <PeriodChip label={selectedLabel} onClear={() => handlePeriodChange('')} />}
+                  </div>
+                  <GaugeChart value={overview.summary?.avgScore || 0} />
+                </div>
 
-                  {/* Label tháng đang xem */}
-                  {selectedPeriod && (
-                    <div style={{
-                      fontSize: 11, color: 'var(--primary)', fontWeight: 600,
-                      marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4
-                    }}>
-                      <span style={{
-                        background: '#eff6ff', border: '1px solid #bfdbfe',
-                        borderRadius: 20, padding: '2px 10px'
-                      }}>
-                        {selectedLabel}
-                      </span>
-                      <button
-                        onClick={() => handlePeriodChange('')}
-                        style={{ fontSize: 11, color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                      >
-                        × Xóa lọc
+                <div className="glass-card glass-card--teal">
+                  <div className="card-head">
+                    <div>
+                      <div className="card-title">Phân bố xếp loại</div>
+                      <div className="card-sub">Tất cả kỳ</div>
+                    </div>
+                    {selectedPeriod && <PeriodChip label={selectedLabel} onClear={() => handlePeriodChange('')} />}
+                  </div>
+                  {distData.some(v => v > 0) ? (
+                    <div className="chart-wrap">
+                      <ReactApexChart
+                        type="donut"
+                        options={donutOpts}
+                        series={distData}
+                        height={isMobile ? 160 : 230}
+                      />
+                    </div>
+                  ) : (
+                    <EmptyChart />
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* KPI Bar + Company trend — 2 cột trên mobile, full width trên desktop */}
+            <section className="db-section">
+              <div className="cards-row-2 cards-row-2--charts">
+
+                {/* KPI Bar chart */}
+                <div className="glass-card glass-card--indigo">
+                  <div className="card-head flex-wrap">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div className="card-head-icon"><TrendingUp size={16} /></div>
+                      <span className="card-title">KPI theo phòng ban</span>
+                    </div>
+                    <div className="period-controls">
+                      <button className="period-nav"
+                        disabled={MONTH_OPTIONS.findIndex(m => m.value === selectedPeriod) >= MONTH_OPTIONS.length - 1}
+                        onClick={() => navigatePeriod('prev')}>
+                        <ChevronLeft size={14} />
+                      </button>
+                      <select className="period-select"
+                        value={selectedPeriod}
+                        onChange={e => handlePeriodChange(e.target.value)}>
+                        <option value="">Tất cả</option>
+                        {MONTH_OPTIONS.map(m => (
+                          <option key={m.value} value={m.value}>{m.label}</option>
+                        ))}
+                      </select>
+                      <button className="period-nav"
+                        disabled={!selectedPeriod}
+                        onClick={() => navigatePeriod('next')}>
+                        <ChevronRight size={14} />
                       </button>
                     </div>
-                  )}
+                  </div>
 
-                  {overview.departmentStats?.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={260}>
-                      <BarChart
-                        data={(
-                          isTopAdmin
-                            ? groupByParent(overview.departmentStats)
-                            : isDirector
-                              ? filterChildOnly(overview.departmentStats)  // ← chỉ phòng con
-                              : overview.departmentStats
-                        )?.slice(0, 8)}
-                        layout="vertical"
-                        margin={{ left: isMobile ? 0 : 10, right: isMobile ? 8 : 20 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                        <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} tickCount={6} />
-                        <YAxis type="category" dataKey="department" width={isMobile ? 55 : 110}tick={{ fontSize: 11 }} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Bar dataKey="avgScore" fill="var(--primary-light)" radius={4} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="chart-empty" style={{ paddingTop: 60 }}>
-                      {selectedPeriod ? `Không có dữ liệu cho ${selectedLabel}` : 'Chưa có dữ liệu'}
-                    </div>
-                  )}
-                </div>
-              </div>
+                  {deptLoading && <div className="chart-loading"><Spinner /></div>}
 
-              {/* Phân bố xếp loại */}
-              <div className="card">
-                <div className="card-header">
-                  <div className="card-title">Phân bố xếp loại</div>
-                  {selectedPeriod && (
-                    <span style={{
-                      fontSize: 11, background: '#eff6ff', color: 'var(--primary)',
-                      border: '1px solid #bfdbfe', borderRadius: 20, padding: '2px 10px', fontWeight: 600
-                    }}>
-                      {selectedLabel}
-                    </span>
-                  )}
-                </div>
-                <div className="card-body chart-body">
-                  {distData.length > 0 ? (
-                    <ResponsiveContainer width="80%" height={290}>
-                      <PieChart>
-                        <Pie
-                          data={distData} dataKey="value" nameKey="name"
-                          cx="50%" cy="50%" outerRadius={95}
-                          label={({ name, value, percent }) =>
-                            `${name}: (${(percent * 100).toFixed(0)}%)`
-                          }
-                          labelLine={false}
-                        >
-                          {distData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
-                        </Pie>
-                        <Tooltip formatter={(v, name) => [v, name]} />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="chart-empty">Chưa có dữ liệu</div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Xu hướng KPI theo tháng */}
-            {trend.length > 0 && (
-              <div className="card mb-4">
-                <div className="card-header">
-                  <div className="card-title">Xu hướng KPI phòng ban theo tháng</div>
-                </div>
-                <div className="card-body">
-                  <ResponsiveContainer width="100%" height={220}>
-                    <LineChart data={trend}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                      <XAxis dataKey="period" tick={{ fontSize: 11 }} />
-                      <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} tickCount={6} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Line
-                        type="monotone" dataKey="avgScore"
-                        stroke="var(--accent)" strokeWidth={2.5}
-                        dot={{ r: 4, fill: 'var(--accent)' }}
+                  {deptStats?.length > 0 ? (
+                    <div className="chart-wrap" style={{ position: 'relative' }}>
+                      {deptLoading && <div className="chart-overlay" />}
+                      <ReactApexChart
+                        type="bar"
+                        options={barOpts}
+                        series={[{ name: 'Điểm TB', data: deptStats.map(d => d.avgScore) }]}
+                        height={Math.max(220, deptStats.length * 46 + 60)}
                       />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
-
-            {/* Top nhân viên */}
-            {overview.topEmployees?.length > 0 && (
-              <div className="card">
-                <div className="card-header">
-                  <div className="card-title">🏆 Top nhân viên</div>
-                  {selectedPeriod && (
-                    <span style={{
-                      fontSize: 11, background: '#eff6ff', color: 'var(--primary)',
-                      border: '1px solid #bfdbfe', borderRadius: 20, padding: '2px 10px', fontWeight: 600
-                    }}>
-                      {selectedLabel}
-                    </span>
+                    </div>
+                  ) : !deptLoading && (
+                    <EmptyChart label={selectedPeriod ? `Không có dữ liệu cho ${selectedLabel}` : undefined} />
                   )}
                 </div>
-                <div className="table-wrap">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: 40 }}>#</th>
-                        <th>Nhân viên</th>
-                        <th>Phòng ban</th>
-                        <th>Kỳ</th>
-                        <th>Điểm cuối</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {overview.topEmployees.slice(0, 3).map((e, i) => (
-                        <tr key={i} className={i < 3 ? 'top-row' : ''}>
-                          <td>
-                            <span className={`rank-num rank-num--${i < 3 ? i + 1 : 'default'}`}>
-                              {i + 1}
-                            </span>
-                          </td>
-                          <td>
-                            <div style={{ fontWeight: 600 }}>{e.fullName}</div>
-                            <div className="text-sm text-muted">{e.position}</div>
-                          </td>
-                          <td>{e.department || '—'}</td>
-                          <td><span className="mono" style={{ fontSize: 12 }}>{e.period}</span></td>
-                          <td><ScoreCell score={e.finalTotalScore} /></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+
+                {/* Company trend */}
+                {trend.length > 0 && (
+                  <div className="glass-card">
+                    <div className="card-head">
+                      <span className="card-title">Xu hướng KPI toàn công ty</span>
+                    </div>
+                    <div className="chart-wrap">
+                      <ReactApexChart
+                        type="area"
+                        options={companyTrendOpts}
+                        series={[{ name: 'Điểm TB', data: trend.map(t => t.avgScore) }]}
+                        height={200}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
+            </section>
+
+            {/* Top employees */}
+            {overview.topEmployees?.length > 0 && (
+              <section className="db-section">
+                <div className="glass-card glass-card--amber">
+                  <div className="card-head">
+                    <span className="card-title">🏆 Top nhân viên</span>
+                    {selectedPeriod && <PeriodChip label={selectedLabel} onClear={() => handlePeriodChange('')} />}
+                  </div>
+                  <div className="top-list">
+
+                    {/* Header row — ẩn trên mobile qua CSS */}
+                    <div className="top-row top-row--header">
+                      <span className="emp-rank" style={{ visibility: 'hidden' }}>0</span>
+                      <div className="emp-avatar" style={{ visibility: 'hidden' }} />
+                      <div className="emp-info emp-col-header">Tên nhân viên</div>
+                      <div className="emp-col-header emp-meta-col">Phòng ban · Kỳ</div>
+                      <div className="emp-col-header emp-score-col">Điểm</div>
+                    </div>
+
+                    {overview.topEmployees.slice(0, 3).map((e, i) => (
+                      <div key={i} className={`top-row ${i < 3 ? `top-row--${i + 1}` : ''}`}>
+                        <span className={`emp-rank rank-${i < 3 ? i + 1 : 'n'}`}>{i + 1}</span>
+                        <div className="emp-avatar" style={{ background: DEPT_COLORS[i % DEPT_COLORS.length] }}>
+                          {avatarInitials(e.fullName)}
+                        </div>
+                        <div className="emp-info">
+                          <div className="emp-name">{e.fullName}</div>
+                        </div>
+                        <div className="emp-meta-col emp-meta">{e.department || '—'} · {e.period}</div>
+                        <ScoreCell score={e.finalTotalScore} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
             )}
           </>
         )}
+
+        <div style={{ height: 24 }} />
       </div>
-    </>
+    </div>
   );
+}
+
+/* ─── sub-components ─────────────────────────────────────── */
+function StatCard({ icon, color, value, label }) {
+  return (
+    <div className={`stat-card stat-card--${color}`}>
+      <div className="stat-icon" aria-hidden="true">{icon}</div>
+      <div className="stat-body">
+        <div className="stat-value">{value}</div>
+        <div className="stat-label">{label}</div>
+      </div>
+    </div>
+  );
+}
+
+function PeriodChip({ label, onClear }) {
+  return (
+    <span className="period-chip">
+      {label}
+      <button className="period-chip__clear" onClick={onClear} aria-label="Xóa lọc">
+        <X size={10} />
+      </button>
+    </span>
+  );
+}
+
+function EmptyChart({ label = 'Chưa có dữ liệu' }) {
+  return <div className="chart-empty">{label}</div>;
 }

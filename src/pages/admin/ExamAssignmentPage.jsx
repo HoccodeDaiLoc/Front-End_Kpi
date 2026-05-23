@@ -5,7 +5,7 @@ import { getAssignmentSubmissions } from '../../api/exams';
 import { ChevronLeft, ChevronRight, Search, RotateCcw, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
-
+import './ExamAssignmentPage.scss'
 const pct = (v) => (v != null ? `${parseFloat(v).toFixed(1)}%` : '—');
 
 const StatusBadge = ({ status }) => {

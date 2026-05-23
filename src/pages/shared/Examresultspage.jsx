@@ -11,6 +11,7 @@ import {
     Download, FileSpreadsheet
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import './ExamResultsPage.scss'
 
 // ── Helpers ────────────────────────────────────────────────────
 const pct = (v) => (v != null ? `${parseFloat(v).toFixed(1)}%` : '—');

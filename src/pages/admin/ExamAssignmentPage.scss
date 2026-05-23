@@ -1,0 +1,137 @@
+// ═══════════════════════════════════════════════════
+//  MOBILE ONLY — ExamAssignmentPage (≤ 640px)
+//  Desktop giữ nguyên hoàn toàn
+// ═══════════════════════════════════════════════════
+@media (max-width: 640px) {
+
+  // ── Stats cards: 2x2 thay vì 4 ngang ─────────────
+  div[style*="display: flex"][style*="gap: 16"][style*="marginBottom: 20"] {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  div[style*="display: flex"][style*="gap: 16"][style*="marginBottom: 20"] > .card {
+    flex: 1 1 calc(50% - 4px) !important;
+    min-width: 0 !important;
+    padding: 12px 6px !important;
+  }
+
+  div[style*="display: flex"][style*="gap: 16"][style*="marginBottom: 20"] > .card > div:first-child {
+    font-size: 20px !important;
+  }
+
+  // ── Search full width ─────────────────────────────
+  .card div[style*="maxWidth: 320"],
+  .card div[style*="max-width: 320px"] {
+    max-width: 100% !important;
+  }
+
+  // ── Table: fixed layout ───────────────────────────
+  .card .table {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  // Ẩn: Kết quả (4), Nộp lúc (5)
+  .card .table thead tr th:nth-child(4),
+  .card .table thead tr th:nth-child(5),
+  .card .table tbody tr td:nth-child(4),
+  .card .table tbody tr td:nth-child(5) {
+    display: none !important;
+  }
+
+  // Cột 1 - Nhân viên: chiếm nhiều nhất
+  .card .table thead tr th:nth-child(1),
+  .card .table tbody tr td:nth-child(1) {
+    width: 36%;
+    word-break: break-word;
+    white-space: normal;
+  }
+
+  // Avatar + tên: thu nhỏ avatar
+  .card .table tbody tr td:nth-child(1) > div {
+    gap: 6px !important;
+  }
+
+  .card .table tbody tr td:nth-child(1) > div > div:first-child {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 11px !important;
+    flex-shrink: 0;
+  }
+
+  .card .table tbody tr td:nth-child(1) div[style*="fontWeight: 600"] {
+    font-size: 12px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90px;
+  }
+
+  .card .table tbody tr td:nth-child(1) div[style*="fontSize: 11"] {
+    display: none; // ẩn email
+  }
+
+  // Cột 2 - Trạng thái
+  .card .table thead tr th:nth-child(2),
+  .card .table tbody tr td:nth-child(2) {
+    width: 22%;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  // Cột 3 - Điểm
+  .card .table thead tr th:nth-child(3),
+  .card .table tbody tr td:nth-child(3) {
+    width: 14%;
+    padding-left: 4px;
+    padding-right: 4px;
+    text-align: center;
+  }
+
+  .card .table tbody tr td:nth-child(3) span {
+    font-size: 12px !important;
+  }
+
+  // Cột 6 - Actions
+  .card .table thead tr th:nth-child(6),
+  .card .table tbody tr td:nth-child(6) {
+    width: 28%;
+    padding-left: 4px;
+    padding-right: 6px;
+  }
+
+  // Container actions
+  .card .table td:nth-child(6) > div {
+    display: flex !important;
+    gap: 3px !important;
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  // Tất cả btn trong cột actions
+  .card .table td:nth-child(6) .btn-sm {
+    min-width: 28px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    svg {
+      width: 13px !important;
+      height: 13px !important;
+      display: block !important;
+      flex-shrink: 0;
+    }
+  }
+
+  // "Xem bài" (btn-secondary): ẩn text, thu nhỏ padding
+  .card .table td:nth-child(6) .btn-secondary.btn-sm {
+    font-size: 0 !important;
+    padding: 5px 6px !important;
+  }
+
+  // Reset + Xóa: override inline style padding
+  .card .table td:nth-child(6) .btn-sm:not(.btn-secondary) {
+    padding: 5px 7px !important;
+  }
+}

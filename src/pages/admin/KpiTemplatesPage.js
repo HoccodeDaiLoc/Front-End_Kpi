@@ -7,7 +7,7 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { Plus, Edit2, Trash2, ChevronDown, ChevronUp, Send, Building2, CheckSquare, Square, Layers } from 'lucide-react';
 import api from '../../api/axios';
-
+import './KpiTemplatesPage.scss'
 const emptyTemplate = { name: '', description: '', period: 'monthly', isDefault: false, departmentId: '', criteria: [] };
 const emptyCriteria = { name: '', description: '', weight: 0, maxScore: 10, target: '' };
 
@@ -312,13 +312,13 @@ const getDeptIdsInGroup = (parentId) => {
                           })()}
                         </div>
                         {t.description && <div className="card-subtitle">{t.description}</div>}
-                        <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 4 }}>
-                          {t.criteria?.length || 0} tiêu chí
-                        </div>
+                 <div className="kpi-criteria-count" style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 4 }}>
+  {t.criteria?.length || 0} tiêu chí
+</div>
 
                         {/* Hiển thị phòng ban đã gửi — khối cha → phòng con */}
-                        {t.assignments?.length > 0 && (
-                          <div style={{ marginTop: 8 }}>
+                      {t.assignments?.length > 0 && (
+  <div className="kpi-sent-depts" style={{ marginTop: 8 }}>
                             {parentDepts.map((parent, idx) => {
                               const color = GROUP_COLORS[idx % GROUP_COLORS.length];
                               const sentDeptIds = t.assignments.map(a => a.departmentId || a.department?.id).filter(Boolean);

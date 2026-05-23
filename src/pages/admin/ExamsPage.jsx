@@ -3,6 +3,7 @@ import Header from '../../components/layout/Header';
 import Modal from '../../components/common/Modal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import Pagination from '../../components/common/Pagination';
+import './ExamsPage.scss';
 import {
     getExams, getExamById, createExam, updateExam, deleteExam,
     sendExam, getAssignments, revokeAssignment

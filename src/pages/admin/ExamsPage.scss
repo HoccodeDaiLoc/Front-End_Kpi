@@ -1,0 +1,113 @@
+@media (max-width: 640px) {
+
+  // Search full width
+  .card-header .filter-bar input.form-input {
+    width: 100% !important;
+  }
+
+  // Table: fixed layout để kiểm soát width từng cột
+  .table {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  // Ẩn cột: Số câu (2), Thời gian (3), Điểm đạt (4)
+  .table thead tr th:nth-child(2),
+  .table thead tr th:nth-child(3),
+  .table thead tr th:nth-child(4),
+  .table tbody tr td:nth-child(2),
+  .table tbody tr td:nth-child(3),
+  .table tbody tr td:nth-child(4) {
+    display: none;
+  }
+
+  // Cột 1 - Tên đề thi: chiếm phần lớn
+  .table thead tr th:nth-child(1),
+  .table tbody tr td:nth-child(1) {
+    width: 35%;
+    word-break: break-word;
+    white-space: normal;
+    font-size: 12px;
+  }
+
+  // Cột 5 - Đã gửi
+  .table thead tr th:nth-child(5),
+  .table tbody tr td:nth-child(5) {
+    width: 22%;
+    font-size: 11px;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  // Cột 5 - button "X phòng ban" thu nhỏ
+  .table tbody tr td:nth-child(5) .btn {
+    font-size: 10px !important;
+    padding: 4px 5px !important;
+    white-space: nowrap;
+
+    svg { display: none; } // ẩn chevron icon trong btn này
+  }
+
+  // Cột 6 - Actions: còn lại
+  .table thead tr th:nth-child(6),
+  .table tbody tr td:nth-child(6) {
+    width: 43%;
+    padding-left: 4px;
+    padding-right: 6px;
+  }
+
+  // Actions row: không wrap, icon only
+  .table td:nth-child(6) > div {
+    display: flex;
+    gap: 3px;
+    flex-wrap: nowrap;
+  }
+
+  .table td:nth-child(6) .btn.btn-sm {
+    padding: 5px 7px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+
+    // Ẩn text, chỉ giữ icon
+    font-size: 0;
+    svg {
+      flex-shrink: 0;
+      width: 13px;
+      height: 13px;
+    }
+  }
+
+  // Expanded rows (assignment rows) - colSpan=6
+  .table tbody tr td[colspan="6"] {
+    display: table-cell !important;
+    width: 100% !important;
+    padding: 8px 12px;
+    box-sizing: border-box;
+  }
+
+  // Nội dung expanded row
+  .table tbody tr td[colspan="6"] > div {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+
+    // Text info
+    > span {
+      font-size: 11px;
+      line-height: 1.4;
+      color: var(--text-2);
+    }
+
+    // Nút thu hồi
+    .btn.btn-danger {
+      margin-right: 0 !important;
+      align-self: flex-start;
+      font-size: 11px;
+      padding: 5px 10px;
+    }
+  }
+}

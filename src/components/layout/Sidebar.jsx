@@ -24,9 +24,10 @@ const navConfig = {
     { to: '/admin/exam-results', icon: BarChart2, label: 'Kết quả kiểm tra' },
   ]},
   { section: 'KPI', items: [
+    { to: '/admin/kpi-templates', icon: FileText, label: 'Mẫu KPI' },
     { to: '/admin/evaluations', icon: ClipboardCheck, label: 'Danh sách đánh giá' },
     { to: '/admin/reports', icon: BarChart3, label: 'Báo cáo' },
-      { to: '/admin/kpi-templates', icon: FileText, label: 'Mẫu KPI' },
+      
   ]},
   { section: 'Khảo sát', items: [
   { to: '/proposals', icon: Mailbox, label: 'Quản lý khảo sát' },

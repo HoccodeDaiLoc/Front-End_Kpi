@@ -1,0 +1,161 @@
+// ═══════════════════════════════════════════════════
+//  MOBILE ONLY — ExamResultsPage (≤ 640px)
+//  Desktop giữ nguyên hoàn toàn
+// ═══════════════════════════════════════════════════
+@media (max-width: 640px) {
+
+  // ── Layout wrapper: bỏ flex ngang (main + side panel) ──
+  // Desktop: display:flex row — Mobile: stack dọc
+  // Dùng !important vì style inline
+  div[style*="display: flex"][style*="height: calc(100vh"] {
+    flex-direction: column !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  // ── Main content area ─────────────────────────────
+  div[style*="flex: 1"][style*="overflow: auto"][style*="minWidth: 0"] {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  // ── Search bar full width ─────────────────────────
+  // Override maxWidth: 320 inline
+  .page-content .card div[style*="maxWidth: 320"],
+  .page-content .card div[style*="max-width: 320px"] {
+    max-width: 100% !important;
+  }
+
+  // ── Exam card header: layout lại từ flex ngang → dọc ──
+  // Selector trúng vào div padding:14px 16px có flex + alignItems:center
+  .card > div[style*="padding: 14px 16px"][style*="cursor: pointer"] {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    align-items: flex-start !important;
+  }
+
+  // Title + stats sub: chiếm full width
+  .card > div[style*="padding: 14px 16px"][style*="cursor: pointer"] > div:first-child {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+  }
+
+  // Sub-text stats (người / đã chấm / đạt / phòng ban)
+  .card > div[style*="padding: 14px 16px"] div[style*="display: flex"][style*="gap: 14"] {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  // Progress bar: chiếm full width, bỏ width: 120px cứng
+  .card > div[style*="padding: 14px 16px"][style*="cursor: pointer"] > div[style*="width: 120px"] {
+    width: 100% !important;
+    order: 3;
+  }
+
+  // Nút "Xuất tất cả": nhỏ lại, order sau title
+  .card > div[style*="padding: 14px 16px"][style*="cursor: pointer"] > .btn {
+    order: 2;
+    font-size: 11px !important;
+    padding: 5px 9px !important;
+  }
+
+  // Chevron icon: ra cuối
+  .card > div[style*="padding: 14px 16px"][style*="cursor: pointer"] > svg {
+    order: 4;
+    margin-left: auto;
+  }
+
+  // ── Departments table: ẩn bớt cột ────────────────
+  // Giữ: Phòng ban (1), Đã nộp (3), Đạt (5), Actions (7)
+  // Ẩn: Tổng (2), Đã chấm (4), Gửi lúc (6)
+  .card .table thead tr th:nth-child(2),
+  .card .table thead tr th:nth-child(4),
+  .card .table thead tr th:nth-child(6),
+  .card .table tbody tr td:nth-child(2),
+  .card .table tbody tr td:nth-child(4),
+  .card .table tbody tr td:nth-child(6) {
+    display: none !important;
+  }
+
+  // Table fixed layout sau khi ẩn cột
+  .card .table {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  // Phòng ban: chiếm nhiều nhất
+  .card .table thead tr th:nth-child(1),
+  .card .table tbody tr td:nth-child(1) {
+    width: 36%;
+    word-break: break-word;
+    white-space: normal;
+    font-size: 12px;
+  }
+
+  // Đã nộp (cột 3 visible)
+  .card .table thead tr th:nth-child(3),
+  .card .table tbody tr td:nth-child(3) {
+    width: 18%;
+    font-size: 11px;
+    padding-left: 4px;
+    padding-right: 4px;
+    text-align: center;
+  }
+
+  // Đạt (cột 5 visible)
+  .card .table thead tr th:nth-child(5),
+  .card .table tbody tr td:nth-child(5) {
+    width: 16%;
+    font-size: 11px;
+    padding-left: 4px;
+    padding-right: 4px;
+    text-align: center;
+  }
+
+  // Actions (cột 7)
+  .card .table thead tr th:nth-child(7),
+  .card .table tbody tr td:nth-child(7) {
+    width: 30%;
+    padding-left: 4px;
+    padding-right: 6px;
+  }
+
+  // Action buttons: icon only, no text
+  .card .table td:nth-child(7) .btn.btn-sm {
+    flex: 1;
+    padding: 5px 6px !important;
+   font-size: 10px !important;   // ẩn text
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+  }
+  }
+
+  .card .table td:nth-child(7) > div {
+    display: flex;
+    gap: 4px;
+  }
+
+  // ── Side panel: full width, không fixed ──────────
+  // Desktop: width 420px flex sibling
+  // Mobile: chiếm full width bên dưới
+  div[style*="width: 420px"][style*="borderLeft"][style*="background: #fff"] {
+    width: 100% !important;
+    height: 80vh !important;
+    border-left: none !important;
+    border-top: 1px solid var(--border) !important;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.06) !important;
+    flex-shrink: 1 !important;
+  }
+}
+@media (max-width: 640px) {
+  // Ẩn nút "Xuất tất cả" trong exam header
+  .card > div[style*="padding: 14px 16px"][style*="cursor: pointer"] > .btn {
+    display: none !important;
+  }
+}

@@ -81,3 +81,110 @@
     transition: opacity 0.15s;
   }
 }
+// ═══════════════════════════════════════════════════
+//  MOBILE ONLY — Cơ cấu tổ chức (≤ 640px)
+//  Desktop giữ nguyên, không đụng gì ở trên
+// ═══════════════════════════════════════════════════
+@media (max-width: 640px) {
+
+  // ── Row: layout dọc, tránh tràn ──────────────────
+  .dept-tree-row {
+    align-items: flex-start;
+    padding: 8px 10px 8px 12px;
+    gap: 3px;
+  }
+
+  // ── Toggle & icon: co lại cho gọn ────────────────
+  .dept-tree-toggle {
+    width: 16px;
+    padding-top: 2px;
+  }
+
+  .dept-tree-icon {
+    margin-right: 4px;
+    padding-top: 1px;
+  }
+
+  // ── Name block: tách thành flex-column ───────────
+  .dept-tree-name {
+    // Bọc nội dung thành 2 tầng trong JSX là lý tưởng,
+    // nhưng với CSS thuần, ta ép wrap ở parent flex
+    &--root   { font-size: 13.5px; }
+    &--branch { font-size: 13px; }
+    &--leaf   { font-size: 13px; }
+  }
+
+  // Container chứa name + badges: wrap thành cột
+  // TreeNode render: <div className="dept-tree-name ...">
+  //   <span>tên + code + count</span>   ← span 1
+  //   <span head-badge>...</span>        ← span 2
+  // </div>
+  // → ta ép flex-direction: column để badges xuống dòng
+  .dept-tree-name {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+
+    // Span đầu: tên + code + count – cho phép wrap nhẹ
+    > span:first-child {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    // Code badge gọn hơn
+    .dept-tree-code {
+      font-size: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border, #e5e7eb);
+      border-radius: 5px;
+      padding: 0 5px;
+    }
+
+    // Count text
+    .dept-tree-count {
+      font-size: 10px;
+      margin-left: 0;
+    }
+
+    // Badge lãnh đạo: tự co vừa nội dung, không stretch
+    > span:nth-child(2) {
+      font-size: 10px !important;
+      padding: 2px 7px !important;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  // ── Actions: luôn hiển thị trên mobile (không cần hover) ──
+  .dept-tree-actions {
+    opacity: 1 !important;
+    gap: 1px;
+    padding-top: 1px;
+    flex-shrink: 0;
+  }
+
+  // Action buttons nhỏ hơn một chút
+  .btn.btn-ghost.btn-sm.btn-icon {
+    width: 26px !important;
+    height: 26px !important;
+    padding: 0 !important;
+    border-radius: 6px;
+
+    svg { width: 12px; height: 12px; }
+  }
+
+  // ── Giới hạn indent tối đa: tránh cây sâu bị tràn ──
+  // Level 0: padding-left: 12px (row mặc định)
+  // Level 1: 12 + 28 = 40  → cap lại 28px
+  // Level 2: 12 + 56 = 68  → cap lại 44px
+  // Level 3+: cap 56px
+  .dept-tree-row[style*="padding-left: 44"] { padding-left: 28px !important; }
+  .dept-tree-row[style*="padding-left: 72"] { padding-left: 44px !important; }
+  .dept-tree-row[style*="padding-left: 100"] { padding-left: 56px !important; }
+  .dept-tree-row[style*="padding-left: 128"] { padding-left: 64px !important; }
+}

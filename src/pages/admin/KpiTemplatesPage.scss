@@ -1,0 +1,221 @@
+// ═══════════════════════════════════════════════════
+//  MOBILE ONLY — KpiTemplatesPage (≤ 640px)
+//  Desktop giữ nguyên hoàn toàn
+// ═══════════════════════════════════════════════════
+@media (max-width: 640px) {
+
+  // ── Bộ lọc nhóm phòng ban ────────────────────────
+  // Scroll ngang thay vì wrap, tiết kiệm chiều cao
+  .page-content > div[style*="display: flex"][style*="gap: 8"][style*="flexWrap: wrap"] {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 10px 12px !important;
+    gap: 6px !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    // Các nút filter: không shrink, font nhỏ hơn
+    > button {
+      flex-shrink: 0 !important;
+      font-size: 12px !important;
+      padding: 5px 11px !important;
+      white-space: nowrap !important;
+    }
+  }
+
+  // ── Nhãn "Đang xem: ..." ─────────────────────────
+  .page-content > div[style*="alignItems: center"][style*="gap: 8"][style*="fontSize: 13"] {
+    font-size: 12px !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+
+  // ── Card template ─────────────────────────────────
+  .card .card-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    padding: 14px 14px 12px !important;
+  }
+
+  // Phần info bên trái: full width
+  .card .card-header > div:first-child {
+    width: 100% !important;
+  }
+
+  // Badge row: wrap gọn
+  .card .card-header .flex.gap-2 {
+    flex-wrap: wrap !important;
+    gap: 5px !important;
+  }
+
+  .card-title {
+    font-size: 14px !important;
+  }
+
+  // Ẩn dòng "X tiêu chí"
+  .card .card-header div[style*="font-size: 12px"][style*="margin-top: 4px"] {
+    display: none !important;
+  }
+
+  // Ẩn toàn bộ khu vực phòng ban đã gửi (→ arrows)
+  .card .card-header div[style*="margin-top: 8px"] {
+    display: none !important;
+  }
+
+  // Action buttons: hàng ngang full width, cách đều
+  .card .card-header > .flex.gap-2:last-child {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 40px 40px !important;
+    gap: 6px !important;
+    align-items: center;
+
+    // "Chi tiết" button
+    .btn-ghost:first-child {
+      grid-column: 1;
+      justify-content: center;
+    }
+
+    // "Gửi" button
+    .btn:nth-child(2) {
+      grid-column: 2;
+      justify-content: center;
+    }
+
+    // Edit icon button
+    .btn-secondary {
+      grid-column: 3;
+      padding: 7px !important;
+      justify-content: center;
+
+      svg { margin: 0 !important; }
+    }
+
+    // Delete icon button
+    .btn-ghost:last-child {
+      grid-column: 4;
+      padding: 7px !important;
+      justify-content: center;
+
+      svg { margin: 0 !important; }
+    }
+  }
+
+  // ── Preview table (Chi tiết) ──────────────────────
+  // Ẩn cột "Cá nhân" và "Quản lý trực tiếp" — không cần trên mobile
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-wrap .table thead tr th:nth-child(4),
+  .table-wrap .table thead tr th:nth-child(5),
+  .table-wrap .table tbody tr td:nth-child(4),
+  .table-wrap .table tbody tr td:nth-child(5) {
+    display: none !important;
+  }
+
+  .table-wrap .table {
+    table-layout: fixed;
+    width: 100%;
+    font-size: 12px;
+  }
+
+  // STT
+  .table-wrap .table thead tr th:nth-child(1),
+  .table-wrap .table tbody tr td:nth-child(1) {
+    width: 36px;
+    text-align: center;
+    font-size: 11px;
+  }
+
+  // Tiêu chí
+  .table-wrap .table thead tr th:nth-child(2),
+  .table-wrap .table tbody tr td:nth-child(2) {
+    width: auto;
+    word-break: break-word;
+    white-space: normal;
+  }
+
+  // Điểm tối đa
+  .table-wrap .table thead tr th:nth-child(3),
+  .table-wrap .table tbody tr td:nth-child(3) {
+    width: 64px;
+    text-align: center;
+    font-size: 12px;
+  }
+
+  // ── Modal Gửi cho phòng ban ───────────────────────
+  // Modal full screen trên mobile
+  .modal-overlay .modal,
+  div[class*="modal"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+
+  // Danh sách phòng ban trong modal: tăng touch target
+  div[style*="maxHeight: 420"] {
+    max-height: 50vh !important;
+  }
+
+  // ── Modal Form tạo/sửa (size xl) ─────────────────
+  // Table nhân sự preview: font nhỏ
+  div[style*="border: 1px solid #ccc"] table {
+    font-size: 12px !important;
+
+    td {
+      padding: 5px 8px !important;
+    }
+
+    td:first-child {
+      width: 140px !important;
+      font-size: 11px !important;
+    }
+  }
+
+  // Criteria table trong form
+  div[style*="border: 1px solid var(--border)"] table {
+    font-size: 12px !important;
+
+    // Ẩn cột STT
+    thead tr th:nth-child(1),
+    tbody tr td:nth-child(1) {
+      display: none !important;
+    }
+
+    // Điểm tối đa: hẹp lại
+    thead tr th:nth-child(3),
+    tbody tr td:nth-child(3) {
+      width: 72px !important;
+    }
+
+    textarea.form-textarea {
+      min-height: 48px !important;
+      font-size: 12px !important;
+    }
+
+    input.form-input {
+      font-size: 12px !important;
+    }
+  }
+
+  // form-row: stack dọc
+  .form-row {
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+}
