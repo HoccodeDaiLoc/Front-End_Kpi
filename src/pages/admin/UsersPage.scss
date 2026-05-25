@@ -1,5 +1,4 @@
 .users-page {
-
   @media (max-width: 768px) {
 
     .card-header {
@@ -16,17 +15,19 @@
           input.form-input { width: 100% !important; }
         }
 
+        // fix "Tất cả vai trò" bị cắt
         select.form-select {
-          flex: 0 0 130px !important;
-          width: 130px !important;
+          flex: 0 0 auto !important;
+          width: auto !important;
+          min-width: 120px !important;
+          font-size: 13px !important;
         }
       }
     }
 
     .table-wrap {
       padding: 0 10px 12px;
- overflow-x: auto;                    // ← thêm dòng này
-  -webkit-overflow-scrolling: touch;  
+
       table {
         display: block;
         border: none;
@@ -40,8 +41,7 @@
         }
 
         tr {
-          display: grid;
-          grid-template-columns: 1fr auto auto;
+          display: flex;
           align-items: center;
           gap: 8px;
           padding: 10px 12px;
@@ -52,34 +52,38 @@
         }
 
         td:nth-child(1) {
+          flex: 1;
           min-width: 0;
+           text-align: left !important;
 
+          // div đầu tiên = tên → hiện đầy đủ, xuống dòng nếu dài
           div:first-child {
             font-size: 14px;
             font-weight: 600;
             color: var(--text-1);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            white-space: normal;      
+            word-break: break-word;   
+            overflow: visible;        
+            text-align: left !important;
           }
 
-          .text-muted { display: none; }
-        }
-
-        td:nth-child(2) {
-          .badge {
-            font-size: 11px !important;
-            padding: 3px 8px !important;
-            white-space: nowrap;
+          // div thứ 2 = email → ẩn đi
+          div:nth-child(2) {
+            display: none;
           }
         }
 
+        // td 2 = RoleBadge → ẩn
+        td:nth-child(2) { display: none; }
         td:nth-child(3) { display: none; }
         td:nth-child(4) { display: none; }
         td:nth-child(5) { display: none; }
         td:nth-child(6) { display: none; }
 
+        // td 7 = actions
         td:nth-child(7) {
+          flex: 0 0 auto;
+
           .flex { gap: 4px !important; }
 
           .btn-icon {

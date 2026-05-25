@@ -1,0 +1,39 @@
+// ═══════════════════════════════════════════════════
+//  MOBILE ONLY — EvaluationsPage (≤ 640px)
+// ═══════════════════════════════════════════════════
+@media (max-width: 640px) {
+
+  // ── Filter bar: stack dọc ─────────────────────────
+  .card .card-header .flex.gap-2.flex-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  // Search input: full width
+  .card .card-header .flex.gap-2.flex-wrap > div[style*="position: relative"] {
+    width: 100% !important;
+
+    input.form-input {
+      width: 100% !important;
+    }
+  }
+
+  // Select phòng ban + trạng thái: full width
+  .card .card-header .flex.gap-2.flex-wrap > select.form-select {
+    width: 100% !important;
+  }
+
+  // Ẩn icon filter
+  .card .card-header .flex.gap-2.flex-wrap > svg {
+    display: none !important;
+  }
+}
+@media (max-width: 640px) {
+  .card .card-header select.form-select {
+    font-size: 11px !important;
+    padding-left: 6px !important;
+    padding-right: 20px !important;
+  }
+}

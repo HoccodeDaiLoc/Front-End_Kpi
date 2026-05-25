@@ -2,32 +2,75 @@
 //  MOBILE ONLY — KpiTemplatesPage (≤ 640px)
 //  Desktop giữ nguyên hoàn toàn
 // ═══════════════════════════════════════════════════
+// Desktop: ẩn mobile dropdown, hiện button list
+.dept-filter-mobile { display: none; }
+.dept-filter-desktop { display: flex; }
 @media (max-width: 640px) {
+// ── Ẩn desktop filter, hiện mobile dropdown ──────
+  .dept-filter-desktop { display: none !important; }
+  .dept-filter-mobile  { display: block !important; }
 
-  // ── Bộ lọc nhóm phòng ban ────────────────────────
-  // Scroll ngang thay vì wrap, tiết kiệm chiều cao
-  .page-content > div[style*="display: flex"][style*="gap: 8"][style*="flexWrap: wrap"] {
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    padding: 10px 12px !important;
-    gap: 6px !important;
-    scrollbar-width: none !important;
-    -webkit-overflow-scrolling: touch;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-
-    // Các nút filter: không shrink, font nhỏ hơn
-    > button {
-      flex-shrink: 0 !important;
-      font-size: 12px !important;
-      padding: 5px 11px !important;
-      white-space: nowrap !important;
-    }
+  .dept-filter-trigger {
+    width: 100%;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-2);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    gap: 8px;
   }
 
+.dept-filter-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0; right: 0;
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18) !important;
+    z-index: 999 !important;
+    overflow: hidden;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .dept-filter-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    background: #ffffff !important;
+    transition: background 0.15s;
+
+    &:last-child { border-bottom: none; }
+    &.active { background: #f5f5f5 !important; font-weight: 600; }
+    &:active  { background: #eeeeee !important; }
+  }
+
+  .dept-filter-trigger {
+    width: 100%;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff !important;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    gap: 8px;
+  }
+  // ── Bộ lọc nhóm phòng ban ────────────────────────
+ 
   // ── Nhãn "Đang xem: ..." ─────────────────────────
   .page-content > div[style*="alignItems: center"][style*="gap: 8"][style*="fontSize: 13"] {
     font-size: 12px !important;
@@ -68,40 +111,42 @@
     display: none !important;
   }
 
-  // Action buttons: hàng ngang full width, cách đều
-  .card .card-header > .flex.gap-2:last-child {
+ // Action buttons: ẩn Chi tiết, còn Gửi | Edit | Delete
+ .card .card-header > .flex.gap-2:last-child {
     width: 100% !important;
     display: grid !important;
-    grid-template-columns: 1fr 1fr 40px 40px !important;
-    gap: 6px !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
     align-items: center;
 
-    // "Chi tiết" button
+    // Ẩn nút "Chi tiết"
     .btn-ghost:first-child {
-      grid-column: 1;
-      justify-content: center;
+      display: none !important;
     }
 
     // "Gửi" button
     .btn:nth-child(2) {
-      grid-column: 2;
+      grid-column: 1;
       justify-content: center;
     }
 
-    // Edit icon button
+    // Edit icon
     .btn-secondary {
-      grid-column: 3;
+      grid-column: 2;
       padding: 7px !important;
       justify-content: center;
-
       svg { margin: 0 !important; }
     }
 
+
+
     // Delete icon button
     .btn-ghost:last-child {
-      grid-column: 4;
+      grid-column: 3;
       padding: 7px !important;
       justify-content: center;
+      color: var(--danger) !important;  // ← thêm dòng này
+      background: transparent !important;
+      border: 1px solid #fecaca !important;  // ← viền đỏ nhạt
 
       svg { margin: 0 !important; }
     }
@@ -153,8 +198,7 @@
 
   // ── Modal Gửi cho phòng ban ───────────────────────
   // Modal full screen trên mobile
-  .modal-overlay .modal,
-  div[class*="modal"] {
+  .modal-overlay .modal {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;

@@ -12,7 +12,7 @@ import {
     Plus, Trash2, BarChart2, XCircle, Search, ClipboardList,
     Clock, Users, CheckCircle, ChevronRight, X, Pencil, Send, RotateCcw, Building2
 } from 'lucide-react';
-
+import './ProposalsPage.scss'
 const StatusBadge = ({ status }) => {
     const cfg = status === 'active'
         ? { label: 'Đang mở', color: '#16a34a', bg: '#f0fdf4' }
@@ -528,7 +528,7 @@ export default function ProposalsPage() {
     return (
     <div key={p.id} className="card" style={{ padding: '16px 20px' }}>
                                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div className="proposal-info" style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                                             <span style={{ fontWeight: 700, fontSize: 14 }}>{p.title}</span>
                                             <StatusBadge status={p.status} />
@@ -552,8 +552,7 @@ export default function ProposalsPage() {
                                         </div>
                                     </div>
 
-                                    <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                                        {/* Nút chỉnh sửa */}
+                                   <div className="proposal-actions" style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                         <button className="btn btn-secondary btn-sm"
                                             onClick={() => handleEdit(p)}
                                             disabled={editLoading === p.id}>

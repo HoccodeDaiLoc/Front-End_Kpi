@@ -1,0 +1,52 @@
+@media (max-width: 640px) {
+
+  // ── Ẩn description + meta ─────────────────────────
+  .proposal-info > div:nth-child(2),
+  .proposal-info > div:nth-child(3) {
+    display: none !important;
+  }
+
+  // ── Title row: truncate ───────────────────────────
+  .proposal-info {
+    min-width: 0 !important;
+    flex: 1 !important;
+
+    > div:first-child {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      align-items: center !important;
+      gap: 6px !important;
+      overflow: hidden !important;
+
+      > span:first-child {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        font-size: 13px !important;
+        min-width: 0 !important;
+        flex: 1 !important;
+      }
+
+      > span:last-child {
+        flex-shrink: 0 !important;
+      }
+    }
+  }
+
+  // ── Actions: ẩn hết, chỉ giữ nút thứ 2 ──────────
+  .proposal-actions {
+    flex-shrink: 0 !important;
+    flex-wrap: nowrap !important;
+
+    > button {
+      display: none !important;
+    }
+
+    > button:nth-child(2) {
+      display: inline-flex !important;
+      white-space: nowrap !important;
+      font-size: 12px !important;
+      padding: 6px 10px !important;
+    }
+  }
+}

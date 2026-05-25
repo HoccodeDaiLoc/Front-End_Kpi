@@ -261,11 +261,11 @@ export default function ExamsPage() {
         e.title?.toLowerCase().includes(search.toLowerCase())
     );
     const openView = async (exam) => {
-  try {
-    const res = await getExamById(exam.id);
-    setViewModal(res.data.data);
-  } catch { toast.error('Không tải được đề thi'); }
-};
+        try {
+            const res = await getExamById(exam.id);
+            setViewModal(res.data.data);
+        } catch { toast.error('Không tải được đề thi'); }
+    };
     const openCreate = () => {
         setForm({ ...emptyExam, questions: [{ ...emptyQuestion }] });
         setModal('create');
@@ -425,7 +425,7 @@ export default function ExamsPage() {
             <Header title="Quản lý Đề thi" subtitle={`${exams.length} đề thi`}
                 actions={<button className="btn btn-primary btn-sm" onClick={openCreate}><Plus size={14} /> Tạo đề thi</button>} />
 
-            <div className="page-content">
+            <div className="page-content exams-page">
                 <div className="card">
                     <div className="card-header">
                         <div className="filter-bar" style={{ margin: 0 }}>
@@ -460,33 +460,31 @@ export default function ExamsPage() {
                                     const isExpanded = expandedExam === exam.id;
                                     return (
                                         <React.Fragment key={exam.id}>
-                                            <tr>
-                                                <td>
+                                            <tr key={exam.id}>
+                                                <td className="td-name">
                                                     <div style={{ fontWeight: 600, fontSize: 13 }}>{exam.title}</div>
                                                     {exam.description && (
                                                         <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>{exam.description}</div>
                                                     )}
                                                 </td>
-                                                <td>
+                                                <td className="td-hide">
                                                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                                         <FileText size={13} color="var(--text-3)" />
                                                         {exam.question_count || 0} câu
                                                     </span>
                                                 </td>
-                                                <td>
+                                                <td className="td-hide">
                                                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                                         <Clock size={13} color="var(--text-3)" />
                                                         {exam.time_limit || '—'} phút
                                                     </span>
                                                 </td>
-                                                <td>{exam.passing_score}%</td>
-                                                <td>
+                                                <td className="td-hide">{exam.passing_score}%</td>
+                                                <td className="td-hide">
                                                     {examAssigns.length > 0 ? (
-                                                        <button
-                                                            className="btn btn-secondary btn-sm"
+                                                        <button className="btn btn-secondary btn-sm"
                                                             onClick={() => setExpandedExam(isExpanded ? null : exam.id)}
-                                                            style={{ fontSize: 11 }}
-                                                        >
+                                                            style={{ fontSize: 11 }}>
                                                             {examAssigns.length} phòng ban
                                                             {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                                                         </button>
@@ -494,21 +492,20 @@ export default function ExamsPage() {
                                                         <span style={{ color: 'var(--text-3)', fontSize: 12 }}>Chưa gửi</span>
                                                     )}
                                                 </td>
-                                                <td>
-                                                    <div style={{ display: 'flex', gap: 6 }}>
-                                                            <button className="btn btn-secondary btn-sm" title="Xem đề thi" onClick={() => openView(exam)}>
-      <Eye size={13} />
-    </button>
-                                                        <button className="btn btn-secondary btn-sm" title="Gửi cho phòng ban" onClick={() => openSend(exam)}>
+                                                <td className="td-actions">
+                                                    <div className="actions-wrap">
+                                                        <button className="btn btn-secondary btn-sm action-btn hide-mobile" title="Xem đề thi" onClick={() => openView(exam)}>
+                                                            <Eye size={13} />
+                                                        </button>
+                                                        <button className="btn btn-secondary btn-sm action-btn" title="Gửi cho phòng ban" onClick={() => openSend(exam)}>
                                                             <Send size={13} />
                                                         </button>
-                                                        <button className="btn btn-secondary btn-sm" title="Chỉnh sửa" onClick={() => openEdit(exam)}>
+                                                        <button className="btn btn-secondary btn-sm action-btn" title="Chỉnh sửa" onClick={() => openEdit(exam)}>
                                                             <Edit2 size={13} />
                                                         </button>
-                                                        <button className="btn btn-danger btn-sm" title="Xóa" onClick={() => setConfirmDelete(exam)}>
+                                                        <button className="btn btn-danger btn-sm action-btn" title="Xóa" onClick={() => setConfirmDelete(exam)}>
                                                             <Trash2 size={13} />
                                                         </button>
-                                                        
                                                     </div>
                                                 </td>
                                             </tr>
@@ -553,73 +550,73 @@ export default function ExamsPage() {
                 </>}>
                 <ExamForm />
             </Modal>
-<Modal open={!!viewModal} onClose={() => setViewModal(null)}
-  title={`Xem đề thi: ${viewModal?.title}`}
-  footer={<button className="btn btn-secondary" onClick={() => setViewModal(null)}>Đóng</button>}>
-  {viewModal && (
-    <div>
-      {/* Thông tin chung */}
-      <div style={{ display: 'flex', gap: 16, marginBottom: 16, padding: '10px 14px', background: '#f8fafc', borderRadius: 8 }}>
-        <span style={{ fontSize: 13 }}>⏱ {viewModal.time_limit} phút</span>
-        <span style={{ fontSize: 13 }}>🎯 Điểm đạt: {viewModal.passing_score}%</span>
-        <span style={{ fontSize: 13 }}>📝 {viewModal.questions?.length || 0} câu hỏi</span>
-      </div>
+            <Modal open={!!viewModal} onClose={() => setViewModal(null)}
+                title={`Xem đề thi: ${viewModal?.title}`}
+                footer={<button className="btn btn-secondary" onClick={() => setViewModal(null)}>Đóng</button>}>
+                {viewModal && (
+                    <div>
+                        {/* Thông tin chung */}
+                        <div style={{ display: 'flex', gap: 16, marginBottom: 16, padding: '10px 14px', background: '#f8fafc', borderRadius: 8 }}>
+                            <span style={{ fontSize: 13 }}>⏱ {viewModal.time_limit} phút</span>
+                            <span style={{ fontSize: 13 }}>🎯 Điểm đạt: {viewModal.passing_score}%</span>
+                            <span style={{ fontSize: 13 }}>📝 {viewModal.questions?.length || 0} câu hỏi</span>
+                        </div>
 
-      {/* Danh sách câu hỏi */}
-      {viewModal.questions?.map((q, i) => (
-        <div key={i} style={{
-          border: '1px solid var(--border)', borderRadius: 8,
-          padding: 14, marginBottom: 10
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontWeight: 600, fontSize: 13 }}>
-              Câu {i + 1}: {q.content}
-            </span>
-            <span style={{ fontSize: 12, color: 'var(--text-3)', flexShrink: 0, marginLeft: 8 }}>
-              {q.points} điểm
-            </span>
-          </div>
+                        {/* Danh sách câu hỏi */}
+                        {viewModal.questions?.map((q, i) => (
+                            <div key={i} style={{
+                                border: '1px solid var(--border)', borderRadius: 8,
+                                padding: 14, marginBottom: 10
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                                    <span style={{ fontWeight: 600, fontSize: 13 }}>
+                                        Câu {i + 1}: {q.content}
+                                    </span>
+                                    <span style={{ fontSize: 12, color: 'var(--text-3)', flexShrink: 0, marginLeft: 8 }}>
+                                        {q.points} điểm
+                                    </span>
+                                </div>
 
-          {/* Options */}
-          {q.options?.length > 0 && (
-            <div style={{ marginBottom: 8 }}>
-              {q.options.map(opt => (
-                <div key={opt.key} style={{
-                  fontSize: 13, padding: '4px 8px', borderRadius: 4,
-                  background: q.correct_answer?.includes(opt.key) ? '#f0fdf4' : 'transparent',
-                  color: q.correct_answer?.includes(opt.key) ? '#16a34a' : 'var(--text-2)',
-                  fontWeight: q.correct_answer?.includes(opt.key) ? 600 : 400,
-                }}>
-                  {opt.key}. {opt.text}
-                  {q.correct_answer?.includes(opt.key) }
-                </div>
-              ))}
-            </div>
-          )}
+                                {/* Options */}
+                                {q.options?.length > 0 && (
+                                    <div style={{ marginBottom: 8 }}>
+                                        {q.options.map(opt => (
+                                            <div key={opt.key} style={{
+                                                fontSize: 13, padding: '4px 8px', borderRadius: 4,
+                                                background: q.correct_answer?.includes(opt.key) ? '#f0fdf4' : 'transparent',
+                                                color: q.correct_answer?.includes(opt.key) ? '#16a34a' : 'var(--text-2)',
+                                                fontWeight: q.correct_answer?.includes(opt.key) ? 600 : 400,
+                                            }}>
+                                                {opt.key}. {opt.text}
+                                                {q.correct_answer?.includes(opt.key)}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
 
-          {/* Đáp án */}
-          <div style={{ fontSize: 12, color: '#16a34a', marginTop: 4 }}>
-            Đáp án: {
-              q.question_type === 'true_false'
-                ? (q.correct_answer === 'true' ? 'Đúng' : 'Sai')
-                : q.correct_answer || '(Tự luận — AI chấm)'
-            }
-          </div>
+                                {/* Đáp án */}
+                                <div style={{ fontSize: 12, color: '#16a34a', marginTop: 4 }}>
+                                    Đáp án: {
+                                        q.question_type === 'true_false'
+                                            ? (q.correct_answer === 'true' ? 'Đúng' : 'Sai')
+                                            : q.correct_answer || '(Tự luận — AI chấm)'
+                                    }
+                                </div>
 
-          {/* Loại câu */}
-          <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
-            {{
-              multiple_choice: 'Trắc nghiệm 1 đáp án',
-              multi_select: 'Trắc nghiệm nhiều đáp án',
-              true_false: 'Đúng / Sai',
-              short_answer: 'Tự luận',
-            }[q.question_type]}
-          </div>
-        </div>
-      ))}
-    </div>
-  )}
-</Modal>
+                                {/* Loại câu */}
+                                <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
+                                    {{
+                                        multiple_choice: 'Trắc nghiệm 1 đáp án',
+                                        multi_select: 'Trắc nghiệm nhiều đáp án',
+                                        true_false: 'Đúng / Sai',
+                                        short_answer: 'Tự luận',
+                                    }[q.question_type]}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </Modal>
             {/* Modal Chỉnh sửa */}
             <Modal open={modal === 'edit'} onClose={() => setModal(null)}
                 title={`Chỉnh sửa: ${selected?.title}`}
@@ -641,36 +638,36 @@ export default function ExamsPage() {
                         {saving ? 'Đang gửi...' : `Gửi (${sendForm.departmentIds.length} phòng ban)`}
                     </button>
                 </>}>
-               <div className="form-group">
-    <label className="form-label">
-        Chọn phòng ban *
-        {sendForm.departmentIds.length > 0 && (
-            <span style={{ marginLeft: 8, fontSize: 12, color: '#3b82f6', fontWeight: 400 }}>
-                ({sendForm.departmentIds.length} đã chọn)
-            </span>
-        )}
-    </label>
-    <div style={{
-        border: '1px solid var(--border)', borderRadius: 8,
-        maxHeight: 280, overflowY: 'auto', padding: '8px 10px',
-        background: '#fafafa',
-    }}>
-        {/* Render root departments (parentId null/undefined) */}
-        <DeptTree
-            nodes={depts.filter(d => d.parentId === null || d.parentId === undefined)}
-            allDepts={depts}
-            selectedIds={sendForm.departmentIds}
-            sentIds={sendForm.sentDeptIds}
-            onToggle={toggleDept}
-            depth={0}
-        />
-        {depts.length === 0 && (
-            <div style={{ textAlign: 'center', color: 'var(--text-3)', fontSize: 13, padding: 12 }}>
-                Không có phòng ban nào
-            </div>
-        )}
-    </div>
-</div>
+                <div className="form-group">
+                    <label className="form-label">
+                        Chọn phòng ban *
+                        {sendForm.departmentIds.length > 0 && (
+                            <span style={{ marginLeft: 8, fontSize: 12, color: '#3b82f6', fontWeight: 400 }}>
+                                ({sendForm.departmentIds.length} đã chọn)
+                            </span>
+                        )}
+                    </label>
+                    <div style={{
+                        border: '1px solid var(--border)', borderRadius: 8,
+                        maxHeight: 280, overflowY: 'auto', padding: '8px 10px',
+                        background: '#fafafa',
+                    }}>
+                        {/* Render root departments (parentId null/undefined) */}
+                        <DeptTree
+                            nodes={depts.filter(d => d.parentId === null || d.parentId === undefined)}
+                            allDepts={depts}
+                            selectedIds={sendForm.departmentIds}
+                            sentIds={sendForm.sentDeptIds}
+                            onToggle={toggleDept}
+                            depth={0}
+                        />
+                        {depts.length === 0 && (
+                            <div style={{ textAlign: 'center', color: 'var(--text-3)', fontSize: 13, padding: 12 }}>
+                                Không có phòng ban nào
+                            </div>
+                        )}
+                    </div>
+                </div>
                 <div className="form-group">
                     <label className="form-label">Hạn nộp bài (không bắt buộc)</label>
                     <input type="datetime-local" className="form-input"

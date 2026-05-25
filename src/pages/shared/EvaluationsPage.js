@@ -9,7 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import { formatDate, getScoreColor } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 import { Plus, ChevronRight, Filter, Search, Trash2 } from 'lucide-react';
-
+import './EvaluationsPage.scss'
 const STATUS_OPTIONS = ['draft', 'submitted', 'manager_reviewed', 'director_approved', 'rejected'];
 const STATUS_LABELS = {
   draft: 'Bản nháp',

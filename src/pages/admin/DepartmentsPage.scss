@@ -87,104 +87,64 @@
 // ═══════════════════════════════════════════════════
 @media (max-width: 640px) {
 
-  // ── Row: layout dọc, tránh tràn ──────────────────
   .dept-tree-row {
-    align-items: flex-start;
-    padding: 8px 10px 8px 12px;
-    gap: 3px;
+    padding: 10px 12px !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
   }
 
-  // ── Toggle & icon: co lại cho gọn ────────────────
   .dept-tree-toggle {
-    width: 16px;
-    padding-top: 2px;
+    display: none !important;
   }
 
   .dept-tree-icon {
-    margin-right: 4px;
-    padding-top: 1px;
+    margin-right: 4px !important;
+    flex-shrink: 0 !important;
   }
 
-  // ── Name block: tách thành flex-column ───────────
   .dept-tree-name {
-    // Bọc nội dung thành 2 tầng trong JSX là lý tưởng,
-    // nhưng với CSS thuần, ta ép wrap ở parent flex
-    &--root   { font-size: 13.5px; }
-    &--branch { font-size: 13px; }
-    &--leaf   { font-size: 13px; }
-  }
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;        // ← KHÔNG wrap
+    gap: 6px !important;
+    min-width: 0 !important;             // ← cho phép shrink
+    overflow: hidden !important;         // ← cắt overflow
 
-  // Container chứa name + badges: wrap thành cột
-  // TreeNode render: <div className="dept-tree-name ...">
-  //   <span>tên + code + count</span>   ← span 1
-  //   <span head-badge>...</span>        ← span 2
-  // </div>
-  // → ta ép flex-direction: column để badges xuống dòng
-  .dept-tree-name {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 4px !important;
-
-    // Span đầu: tên + code + count – cho phép wrap nhẹ
     > span:first-child {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 4px;
-      min-width: 0;
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      color: var(--text-1) !important;
+      white-space: nowrap !important;    // ← không xuống dòng
+      overflow: hidden !important;
+      text-overflow: ellipsis !important; // ← "..." nếu quá dài
+      min-width: 0 !important;
+      flex-shrink: 1 !important;         // ← co lại nhường chỗ badge
+
+      .dept-tree-code  { display: none !important; }
+      .dept-tree-count { display: none !important; }
     }
 
-    // Code badge gọn hơn
-    .dept-tree-code {
-      font-size: 10px;
-      background: var(--surface-2);
-      border: 1px solid var(--border, #e5e7eb);
-      border-radius: 5px;
-      padding: 0 5px;
-    }
-
-    // Count text
-    .dept-tree-count {
-      font-size: 10px;
-      margin-left: 0;
-    }
-
-    // Badge lãnh đạo: tự co vừa nội dung, không stretch
+    // Badge lãnh đạo: không co, không wrap
     > span:nth-child(2) {
-      font-size: 10px !important;
-      padding: 2px 7px !important;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      font-size: 11px !important;
+      padding: 2px 8px !important;
+      border-radius: 20px !important;
+      flex-shrink: 0 !important;         // ← badge không bị co
+      max-width: 130px !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
     }
   }
 
-  // ── Actions: luôn hiển thị trên mobile (không cần hover) ──
   .dept-tree-actions {
-    opacity: 1 !important;
-    gap: 1px;
-    padding-top: 1px;
-    flex-shrink: 0;
+    display: none !important;
   }
 
-  // Action buttons nhỏ hơn một chút
-  .btn.btn-ghost.btn-sm.btn-icon {
-    width: 26px !important;
-    height: 26px !important;
-    padding: 0 !important;
-    border-radius: 6px;
-
-    svg { width: 12px; height: 12px; }
-  }
-
-  // ── Giới hạn indent tối đa: tránh cây sâu bị tràn ──
-  // Level 0: padding-left: 12px (row mặc định)
-  // Level 1: 12 + 28 = 40  → cap lại 28px
-  // Level 2: 12 + 56 = 68  → cap lại 44px
-  // Level 3+: cap 56px
-  .dept-tree-row[style*="padding-left: 44"] { padding-left: 28px !important; }
-  .dept-tree-row[style*="padding-left: 72"] { padding-left: 44px !important; }
-  .dept-tree-row[style*="padding-left: 100"] { padding-left: 56px !important; }
-  .dept-tree-row[style*="padding-left: 128"] { padding-left: 64px !important; }
+  .dept-tree-row[style*="padding-left: 44"] { padding-left: 24px !important; }
+  .dept-tree-row[style*="padding-left: 72"] { padding-left: 36px !important; }
+  .dept-tree-row[style*="padding-left: 100"] { padding-left: 48px !important; }
+  .dept-tree-row[style*="padding-left: 128"] { padding-left: 56px !important; }
 }

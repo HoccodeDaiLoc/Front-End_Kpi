@@ -39,16 +39,17 @@ export default function KpiTemplatesPage() {
   const [sendTarget, setSendTarget] = useState(null);
   const [selectedDepts, setSelectedDepts] = useState([]);
   const [sending, setSending] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
 
-useEffect(() => {
-  load();
-  getDepartments().then(r => {
-    const data = r.data.data;
-    setDepts(data);
-  }).catch((err) => { 
-    console.error('getDepartments ERROR:', err);
-  });
-}, []);
+  useEffect(() => {
+    load();
+    getDepartments().then(r => {
+      const data = r.data.data;
+      setDepts(data);
+    }).catch((err) => {
+      console.error('getDepartments ERROR:', err);
+    });
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -59,13 +60,13 @@ useEffect(() => {
 
   // ── Tính nhóm phòng ban cha ──────────────────────────────────────────────
   const parentDepts = depts.filter(d => !d.parentId);
-const getChildren = (parentId) => 
-  depts.filter(d => d.parentId != null && String(d.parentId) === String(parentId));
+  const getChildren = (parentId) =>
+    depts.filter(d => d.parentId != null && String(d.parentId) === String(parentId));
   // Lấy tất cả departmentId (cả cha lẫn con) thuộc một nhóm cha
-const getDeptIdsInGroup = (parentId) => {
-  const children = getChildren(parentId).map(d => d.id);
-  return [parentId, ...children];
-};
+  const getDeptIdsInGroup = (parentId) => {
+    const children = getChildren(parentId).map(d => d.id);
+    return [parentId, ...children];
+  };
 
   // Lọc template theo nhóm đang chọn — dựa vào departmentId của template
   const filteredTemplates = templates.filter(t => {
@@ -177,45 +178,38 @@ const getDeptIdsInGroup = (parentId) => {
 
         {/* ── Bộ lọc theo nhóm phòng ban ── */}
         {parentDepts.length > 0 && (
-          <div style={{
-            display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16,
-            padding: '12px 16px', background: 'var(--surface-2)',
-            borderRadius: 12, border: '1px solid var(--border)'
-          }}>
-            {/* Nút "Tất cả" */}
-            <button
-              onClick={() => setActiveGroup('all')}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '6px 14px', borderRadius: 20, cursor: 'pointer', border: 'none',
-                fontSize: 13, fontWeight: activeGroup === 'all' ? 700 : 500,
-                background: activeGroup === 'all' ? '#eb1010' : 'var(--surface-3)',
-                color: activeGroup === 'all' ? '#fff' : 'var(--text-2)',
-                transition: 'all 0.15s',
-              }}
-            >
-              <Layers size={13} />
-              Tất cả
-              <span style={{
-                background: activeGroup === 'all' ? 'rgba(254, 254, 254, 0.85)' : 'var(--border)',
-                color: activeGroup === 'all' ? '#e30d0de1' : 'var(--text-3)',
-                borderRadius: 20, padding: '1px 7px', fontSize: 11, fontWeight: 700,
-                marginLeft: 2
-              }}>
-                {templates.length}
-              </span>
-            </button>
-
-            {/* Nút từng nhóm/khối */}
-            {parentDepts.map((dept, idx) => {
-              const color = GROUP_COLORS[idx % GROUP_COLORS.length];
-              const isActive = activeGroup === dept.id;
-              const count = countByGroup(dept.id);
-              return (
-                <button
-                  key={dept.id}
-                  onClick={() => setActiveGroup(dept.id)}
-                  style={{
+          <>
+            {/* Desktop: button list */}
+            <div className="dept-filter-desktop" style={{
+              display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16,
+              padding: '12px 16px', background: 'var(--surface-2)',
+              borderRadius: 12, border: '1px solid var(--border)'
+            }}>
+              <button
+                onClick={() => setActiveGroup('all')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '6px 14px', borderRadius: 20, cursor: 'pointer', border: 'none',
+                  fontSize: 13, fontWeight: activeGroup === 'all' ? 700 : 500,
+                  background: activeGroup === 'all' ? '#eb1010' : 'var(--surface-3)',
+                  color: activeGroup === 'all' ? '#fff' : 'var(--text-2)',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <Layers size={13} />
+                Tất cả
+                <span style={{
+                  background: activeGroup === 'all' ? 'rgba(254, 254, 254, 0.85)' : 'var(--border)',
+                  color: activeGroup === 'all' ? '#e30d0de1' : 'var(--text-3)',
+                  borderRadius: 20, padding: '1px 7px', fontSize: 11, fontWeight: 700, marginLeft: 2
+                }}>{templates.length}</span>
+              </button>
+              {parentDepts.map((dept, idx) => {
+                const color = GROUP_COLORS[idx % GROUP_COLORS.length];
+                const isActive = activeGroup === dept.id;
+                const count = countByGroup(dept.id);
+                return (
+                  <button key={dept.id} onClick={() => setActiveGroup(dept.id)} style={{
                     display: 'flex', alignItems: 'center', gap: 6,
                     padding: '6px 14px', borderRadius: 20, cursor: 'pointer',
                     fontSize: 13, fontWeight: isActive ? 700 : 500,
@@ -223,29 +217,76 @@ const getDeptIdsInGroup = (parentId) => {
                     background: isActive ? color.bg : 'var(--surface-3)',
                     color: isActive ? color.text : 'var(--text-2)',
                     transition: 'all 0.15s',
-                  }}
-                >
-                  <span style={{
-                    width: 8, height: 8, borderRadius: '50%',
-                    background: isActive ? color.dot : 'var(--text-3)',
-                    flexShrink: 0
-                  }} />
-                  {dept.name}
-                  {count > 0 && (
-                    <span style={{
-                      background: isActive ? color.border : 'var(--border)',
-                      color: isActive ? color.text : 'var(--text-3)',
-                      borderRadius: 20, padding: '1px 7px', fontSize: 11, fontWeight: 700,
-                      marginLeft: 2
-                    }}>
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                  }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: isActive ? color.dot : 'var(--text-3)', flexShrink: 0 }} />
+                    {dept.name}
+                    {count > 0 && (
+                      <span style={{
+                        background: isActive ? color.border : 'var(--border)',
+                        color: isActive ? color.text : 'var(--text-3)',
+                        borderRadius: 20, padding: '1px 7px', fontSize: 11, fontWeight: 700, marginLeft: 2
+                      }}>{count}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Mobile: custom dropdown */}
+            <div className="dept-filter-mobile" style={{ position: 'relative', marginBottom: 12 }}>
+              <button className="dept-filter-trigger" onClick={() => setFilterOpen(o => !o)}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {activeGroup === 'all'
+                    ? <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Layers size={14} /> Tất cả</span>
+                    : (() => {
+                      const idx = parentDepts.findIndex(d => d.id === activeGroup);
+                      const color = GROUP_COLORS[idx % GROUP_COLORS.length];
+                      return (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: color.dot, flexShrink: 0 }} />
+                          {parentDepts[idx]?.name}
+                        </span>
+                      );
+                    })()
+                  }
+                </span>
+                <ChevronDown size={16} style={{ transform: filterOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
+              </button>
+
+              {filterOpen && (
+                <div className="dept-filter-dropdown">
+                  <div
+                    className={`dept-filter-option ${activeGroup === 'all' ? 'active' : ''}`}
+                    onClick={() => { setActiveGroup('all'); setFilterOpen(false); }}
+                  >
+                    <Layers size={14} style={{ flexShrink: 0 }} />
+                    <span style={{ flex: 1 }}>Tất cả</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-3)' }}>{templates.length}</span>
+                    {activeGroup === 'all' && <span style={{ color: 'var(--primary)', marginLeft: 4 }}>✓</span>}
+                  </div>
+                  {parentDepts.map((dept, idx) => {
+                    const color = GROUP_COLORS[idx % GROUP_COLORS.length];
+                    const isActive = activeGroup === dept.id;
+                    const count = countByGroup(dept.id);
+                    return (
+                      <div
+                        key={dept.id}
+                        className={`dept-filter-option ${isActive ? 'active' : ''}`}
+                        onClick={() => { setActiveGroup(dept.id); setFilterOpen(false); }}
+                      >
+                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: color.dot, flexShrink: 0 }} />
+                        <span style={{ flex: 1, color: isActive ? color.text : 'var(--text-1)' }}>{dept.name}</span>
+                        {count > 0 && <span style={{ fontSize: 11, color: 'var(--text-3)' }}>{count}</span>}
+                        {isActive && <span style={{ color: color.dot, marginLeft: 4 }}>✓</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
         )}
+
 
         {/* ── Nhãn bộ lọc đang active ── */}
         {activeGroup !== 'all' && activeGroupName && (
@@ -312,20 +353,20 @@ const getDeptIdsInGroup = (parentId) => {
                           })()}
                         </div>
                         {t.description && <div className="card-subtitle">{t.description}</div>}
-                 <div className="kpi-criteria-count" style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 4 }}>
-  {t.criteria?.length || 0} tiêu chí
-</div>
+                        <div className="kpi-criteria-count" style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 4 }}>
+                          {t.criteria?.length || 0} tiêu chí
+                        </div>
 
                         {/* Hiển thị phòng ban đã gửi — khối cha → phòng con */}
-                      {t.assignments?.length > 0 && (
-  <div className="kpi-sent-depts" style={{ marginTop: 8 }}>
+                        {t.assignments?.length > 0 && (
+                          <div className="kpi-sent-depts" style={{ marginTop: 8 }}>
                             {parentDepts.map((parent, idx) => {
                               const color = GROUP_COLORS[idx % GROUP_COLORS.length];
                               const sentDeptIds = t.assignments.map(a => a.departmentId || a.department?.id).filter(Boolean);
                               // Các phòng CON của khối này đã được gửi
-                              const sentChildren = depts.filter(d => 
-  String(d.parentId) === String(parent.id) && sentDeptIds.includes(d.id)
-);
+                              const sentChildren = depts.filter(d =>
+                                String(d.parentId) === String(parent.id) && sentDeptIds.includes(d.id)
+                              );
                               const parentSent = sentDeptIds.includes(parent.id);
                               if (!parentSent && !sentChildren.length) return null;
                               // Tên hiển thị bên phải mũi tên
@@ -442,7 +483,7 @@ const getDeptIdsInGroup = (parentId) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 420, overflowY: 'auto' }}>
           {parentDepts.map((parent, idx) => {
             const color = GROUP_COLORS[idx % GROUP_COLORS.length];
-            const children = getChildren(parent.id); 
+            const children = getChildren(parent.id);
             const allDepts = [parent, ...children];
             const allIds = allDepts.map(d => d.id);
             const selectedInGroup = allIds.filter(id => selectedDepts.includes(id));
@@ -459,12 +500,12 @@ const getDeptIdsInGroup = (parentId) => {
             return (
               <div key={parent.id} style={{
                 border: `1.5px solid ${selectedInGroup.length ? color.border : 'var(--border)'}`,
-                borderRadius: 10, 
-                background: 'var(--surface-1)', 
+                borderRadius: 10,
+                background: 'var(--surface-1)',
                 transition: 'all 0.15s',
-                position: 'relative',       
-                 zIndex: 0,  
-                  marginBottom: 4,
+                position: 'relative',
+                zIndex: 0,
+                marginBottom: 4,
               }}>
                 {/* Header nhóm — phòng ban cha */}
                 <div
@@ -503,7 +544,7 @@ const getDeptIdsInGroup = (parentId) => {
 
                 {/* Phòng ban con */}
                 {children.length > 0 && (
-                  <div style={{ padding: '6px 0' ,background: selectedInGroup.length ? color.bg : 'var(--surface-1)',}}>
+                  <div style={{ padding: '6px 0', background: selectedInGroup.length ? color.bg : 'var(--surface-1)', }}>
                     {children.map(child => {
                       const isSelected = selectedDepts.includes(child.id);
                       const alreadySent = (sendTarget?.assignments || []).some(a => (a.departmentId || a.department?.id) === child.id);
@@ -513,7 +554,7 @@ const getDeptIdsInGroup = (parentId) => {
                           style={{
                             display: 'flex', alignItems: 'center', gap: 10,
                             padding: '7px 14px 7px 36px',
-                             background: isSelected ? `${color.bg}99` : 'var(--surface-1)',
+                            background: isSelected ? `${color.bg}99` : 'var(--surface-1)',
                           }}
                         >
                           <div onClick={() => toggleDept(child.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>

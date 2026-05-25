@@ -20,14 +20,18 @@ function buildTree(depts) {
 }
 
 function TreeNode({ node, level = 0, onEdit, onDelete, onAddChild, onEditHead }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const hasChildren = node.children?.length > 0;
   const indent = level * 28;
   const nameClass = level === 0 ? 'dept-tree-name--root' : hasChildren ? 'dept-tree-name--branch' : 'dept-tree-name--leaf';
 
   return (
     <div>
-      <div className="dept-tree-row" style={{ paddingLeft: 16 + indent }}>
+      <div 
+  className="dept-tree-row" 
+  style={{ paddingLeft: 16 + indent }}
+  onClick={() => hasChildren && setOpen(o => !o)}  
+>
         {/* Toggle */}
         <div className={`dept-tree-toggle ${!hasChildren ? 'dept-tree-toggle--empty' : ''}`}
           onClick={() => hasChildren && setOpen(o => !o)}>
