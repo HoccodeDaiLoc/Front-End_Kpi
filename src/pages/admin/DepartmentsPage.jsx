@@ -5,7 +5,7 @@ import { userAPI } from '../../api';
 import Modal from '../../components/common/Modal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
-import { Plus, Edit2, Trash2, ChevronDown, ChevronRight, Building2, FolderOpen, Folder, UserCheck, UserX } from 'lucide-react';
+import { Plus, Edit2, Trash2, ChevronDown, ChevronRight, Building2, Network, UserCheck, UserX } from 'lucide-react';
 import './DepartmentsPage.scss';
 
 function buildTree(depts) {
@@ -42,14 +42,12 @@ function TreeNode({ node, level = 0, onEdit, onDelete, onAddChild, onEditHead })
         </div>
 
         {/* Icon */}
-        <div className="dept-tree-icon">
-          {level === 0
-            ? <Building2 size={15} color="var(--primary)" />
-            : hasChildren
-              ? <FolderOpen size={14} color="var(--warning)" />
-              : <Folder size={14} color="var(--text-3)" />
-          }
-        </div>
+<div className="dept-tree-icon">
+  {level === 0
+    ? <Building2 size={15} color="var(--primary)" />
+    : <Network size={14} color="#8b5cf6" />
+  }
+</div>
 
         {/* Name + head info */}
         <div className={`dept-tree-name ${nameClass}`} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
