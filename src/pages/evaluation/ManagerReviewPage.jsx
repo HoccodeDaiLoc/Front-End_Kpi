@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import Spinner from '../../components/common/Spinner';
 import { CheckCircle, XCircle, ArrowLeft, AlertTriangle, User, Building2, Briefcase, Calendar } from 'lucide-react';
-import './ManagerReviewPage.scss';
+import './Managerreviewpage.scss';
 
 const RATINGS = [
   { range: '95–100', rank: 'A', color: 'green' },
