@@ -1,0 +1,340 @@
+// ══════════════════════════════════════════════
+//  ManagerReviewPage.scss
+// ══════════════════════════════════════════════
+
+$brand-red:      #c0392b;
+$brand-red-dark: #922b21;
+$brand-red-soft: #fdf2f2;
+$gold:           #e67e22;
+$gold-dark:      #ca6f1e;
+$yellow:         #f59e0b;
+$yellow-soft:    #fffbeb;
+$yellow-border:  #fcd34d;
+$green:          #16a34a;
+$green-soft:     #f0fdf4;
+$green-border:   #86efac;
+$success:        #27ae60;
+$warning-bg:     #fff8e1;
+$warning-border: #ffe082;
+$gray-50:        #f9fafb;
+$gray-100:       #f3f4f6;
+$gray-200:       #e5e7eb;
+$gray-400:       #9ca3af;
+$gray-600:       #4b5563;
+$gray-800:       #1f2937;
+$white:          #ffffff;
+
+// ── Animations ─────────────────────────────────
+@keyframes pulse-yellow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba($yellow, 0.5); }
+  50%       { box-shadow: 0 0 0 4px rgba($yellow, 0.2); }
+}
+
+// ══════════════════════════════════════════════
+//  INPUT SỐ QUẢN LÝ CHẤM
+//  - Chưa điền  → viền vàng + nền vàng nhạt + pulse
+//  - Đã điền    → viền xanh lá + nền xanh nhạt
+// ══════════════════════════════════════════════
+.score-number-input {
+  width: 72px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  color: $gray-800;
+  transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+  display: block;
+  margin: 0 auto;
+
+  // Ẩn spinner
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  &[type=number] { -moz-appearance: textfield; }
+
+  // ── Chưa điền (mặc định) → VÀNG ──
+  border: 2px solid $yellow-border;
+  background: $yellow-soft;
+  animation: pulse-yellow 2.2s ease-in-out infinite;
+
+  &:focus {
+    outline: none;
+    border-color: $yellow;
+    box-shadow: 0 0 0 3px rgba($yellow, 0.25);
+    animation: none;
+  }
+
+  // ── Đã điền → XANH LÁ ──
+  &.score-filled {
+    border: 2px solid $green-border;
+    background: $green-soft;
+    animation: none;
+    color: $green;
+
+    &:focus {
+      border-color: $green;
+      box-shadow: 0 0 0 3px rgba($green, 0.2);
+    }
+  }
+}
+
+.score-max-hint {
+  font-size: 12px;
+  color: $gray-400;
+  display: block;
+  text-align: center;
+  margin-top: 3px;
+}
+
+// ── Ghi chú tiêu chí — bình thường, không validate ──
+.note-text-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1.5px solid $gray-200;
+  border-radius: 6px;
+  font-size: 13px;
+  color: $gray-800;
+  background: $white;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: $gold;
+    box-shadow: 0 0 0 3px rgba($gold, 0.12);
+  }
+  &::placeholder { color: $gray-400; }
+}
+
+// ══════════════════════════════════════════════
+//  TEXTAREA NHẬN XÉT TỔNG QUÁT
+//  - Chưa điền  → viền vàng + nền vàng nhạt
+//  - Đã điền    → viền xanh lá + nền xanh nhạt
+// ══════════════════════════════════════════════
+.manager-review-comment {
+  margin: 8px 0 16px;
+
+  .review-label {
+    display: block;
+    font-weight: 700;
+    font-size: 13px;
+    color: $brand-red;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+
+  .form-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: $gray-800;
+    resize: vertical;
+    min-height: 90px;
+    transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+    box-sizing: border-box;
+
+    &::placeholder { color: $gray-400; }
+
+    // Chưa điền → vàng (mặc định)
+    border: 2px solid $yellow-border;
+    background: $yellow-soft;
+    animation: pulse-yellow 2.2s ease-in-out infinite;
+
+    &:focus {
+      outline: none;
+      border-color: $yellow;
+      box-shadow: 0 0 0 3px rgba($yellow, 0.2);
+      animation: none;
+    }
+
+    // Đã điền → xanh
+    &.textarea-filled {
+      border: 2px solid $green-border;
+      background: $green-soft;
+      animation: none;
+
+      &:focus {
+        border-color: $green;
+        box-shadow: 0 0 0 3px rgba($green, 0.2);
+      }
+    }
+  }
+}
+
+// ── Bảng chấm điểm ────────────────────────────
+.kpi-score-table.full-scores {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 14px;
+
+  thead tr {
+    background: $brand-red;
+    color: $white;
+
+    th {
+      padding: 10px 12px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 13px;
+      border: 1px solid $brand-red-dark;
+
+      &:nth-child(2) { text-align: left; }
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid $gray-200;
+      transition: background 0.15s;
+      &:hover { background: $gray-50; }
+
+      &.total-row {
+        background: $brand-red !important;
+        color: $white;
+        font-weight: 700;
+
+        td {
+          padding: 10px 12px;
+          text-align: center;
+          border: 1px solid $brand-red-dark;
+          font-size: 15px;
+        }
+        .total-label { text-align: left; font-size: 13px; }
+      }
+
+      &.rank-row {
+        background: $gray-100;
+        font-weight: 700;
+
+        td {
+          padding: 8px 12px;
+          text-align: center;
+          border: 1px solid $gray-200;
+          font-size: 14px;
+          color: $brand-red;
+        }
+        .rank-label { text-align: left; color: $gray-800; }
+      }
+    }
+
+    td {
+      padding: 10px 12px;
+      border: 1px solid $gray-200;
+      vertical-align: middle;
+    }
+  }
+
+  .stt-cell       { text-align: center; width: 44px; color: $gray-600; }
+  .criteria-cell  { text-align: left; min-width: 180px; }
+  .criteria-name  { font-weight: 600; color: $gray-800; margin-bottom: 2px; }
+  .criteria-desc  { font-size: 12px; color: $gray-400; margin-bottom: 4px; }
+  .achievement-value {
+    font-size: 12px; color: $success;
+    margin-top: 4px; font-style: italic;
+  }
+  .max-score-cell   { text-align: center; color: $gray-600; width: 80px; }
+  .self-score-value { text-align: center; font-weight: 600; color: $brand-red; width: 100px; }
+  .mgr-score-cell   { text-align: center; width: 120px; }
+  .mgr-note-cell    { min-width: 160px; }
+  .mgr-input-col    { width: 120px; }
+}
+
+// ── Nhận xét nhân viên (read-only) ───────────
+.comment-table.full-comments {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 16px;
+
+  td {
+    padding: 10px 14px;
+    border: 1px solid $gray-200;
+    font-size: 14px;
+  }
+
+  .comment-cell {
+    background: $gray-50;
+
+    .comment-title {
+      font-weight: 600; font-size: 13px;
+      color: $brand-red; margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: 0.02em;
+    }
+    .comment-content {
+      color: $gray-800; font-style: italic;
+      line-height: 1.6; min-height: 32px;
+    }
+  }
+}
+
+// ── Form từ chối ──────────────────────────────
+.reject-form-box {
+  background: $warning-bg;
+  border: 1.5px solid $warning-border;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+
+  .alert-warning {
+    background: #fff3cd; border: 1px solid #ffc107;
+    border-radius: 6px; padding: 10px 14px;
+    font-size: 13px; color: #856404; margin-bottom: 14px;
+  }
+
+  .form-label {
+    display: block; font-weight: 600;
+    font-size: 13px; color: $gray-800; margin-bottom: 6px;
+  }
+
+  .form-textarea {
+    width: 100%; padding: 10px 14px;
+    border: 1.5px solid $warning-border; border-radius: 8px;
+    font-size: 14px; color: $gray-800;
+    resize: vertical; min-height: 100px;
+    background: $white; box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: $brand-red;
+      box-shadow: 0 0 0 3px rgba($brand-red, 0.12);
+    }
+    &::placeholder { color: $gray-400; }
+  }
+}
+
+// ── Action bar cuối trang ─────────────────────
+.review-action-bar {
+  display: flex; gap: 12px;
+  justify-content: flex-end; align-items: center;
+  padding: 20px 0 8px;
+  border-top: 1px solid $gray-200; margin-top: 8px;
+}
+
+// ── Live score preview ────────────────────────
+.live-score-preview {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: $gray-100; border: 1px solid $gray-200;
+  border-radius: 20px; padding: 4px 14px;
+  font-size: 13px; color: $gray-600; margin-left: 12px;
+
+  .score-val { font-weight: 700; font-size: 15px; color: $brand-red; }
+
+  .rank-badge {
+    font-weight: 700; font-size: 13px;
+    background: $brand-red; color: $white;
+    border-radius: 50%; width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+  }
+}
+
+// ── Missing badge ─────────────────────────────
+.missing-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: $yellow-soft; border: 1px solid $yellow-border;
+  border-radius: 20px; padding: 3px 12px;
+  font-size: 12px; font-weight: 600; color: darken($yellow, 15%);
+  margin-left: 10px;
+}

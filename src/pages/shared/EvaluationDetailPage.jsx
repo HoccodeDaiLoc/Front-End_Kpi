@@ -452,6 +452,7 @@ const handleSaveDraft = async () => {
   className={selfScores[c.id]?.score === '' || selfScores[c.id]?.score == null ? 'field-required' : ''}
   value={selfScores[c.id]?.score ?? ''}
   placeholder="—"
+  onWheel={e => e.target.blur()}
                         onChange={e => {
                           const val = e.target.value;
                           if (val === '' || parseFloat(val) <= c.maxScore) {
@@ -591,10 +592,10 @@ const handleSaveDraft = async () => {
 
             {/* Manager */}
             {canManagerReview && <>
-              <button className="btn btn-warning btn-sm" onClick={() => setReviewModal('manager')}>
+              <button className="btn btn-warning btn-sm" onClick={() => navigate(`/evaluation/${id}/review`)}>  
                 <CheckCircle size={13} /> Duyệt KPI
               </button>
-              <button className="btn btn-danger btn-sm" onClick={() => setReviewModal('manager_reject')}>
+              <button className="btn btn-danger btn-sm" onClick={() => navigate(`/evaluation/${id}/review`)}> 
                 <XCircle size={13} /> Từ chối
               </button>
             </>}
@@ -666,6 +667,7 @@ const handleSaveDraft = async () => {
                         <div className="edit-scores no-print">
                           <input type="number" min={0} max={c.maxScore} step={1}
                             value={selfScores[c.id]?.score ?? s?.selfScore ?? ''}
+                             onWheel={e => e.target.blur()}
                             onChange={e => {
                               const val = e.target.value;
                               if (val === '' || parseFloat(val) <= c.maxScore) {
@@ -825,6 +827,7 @@ const handleSaveDraft = async () => {
                       className="score-number-input"
                       value={mgrScores[c.id]?.score ?? ''}
                       placeholder="0"
+                      onWheel={e => e.target.blur()}
                       onChange={e => {
                         const val = e.target.value;
                         if (val === '' || parseFloat(val) <= c.maxScore) {

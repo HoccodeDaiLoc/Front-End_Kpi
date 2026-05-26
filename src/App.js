@@ -38,10 +38,11 @@ import ExamVerifyPage from './pages/shared/ExamVerifyPage';
 import ExamDonePage from './pages/shared/ExamDonePage';
 import TakeExamMobilePage from './pages/shared/TakeExamMobilePage';
 
-import ProposalsPage       from './pages/shared/ProposalsPage';
+import ProposalsPage from './pages/shared/ProposalsPage';
 import ProposalResultsPage from './pages/shared/ProposalResultsPage';
-import MyProposalsPage     from './pages/shared/MyProposalsPage';
-import TakeProposalPage    from './pages/shared/TakeProposalPage';
+import MyProposalsPage from './pages/shared/MyProposalsPage';
+import TakeProposalPage from './pages/shared/TakeProposalPage';
+import ManagerReviewPage from './pages/evaluation/ManagerReviewPage';
 const PrivateRoute = ({ children, roles }) => {
   const { user, loading } = useAuth();
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}><div className="spinner spinner-lg" /></div>;
@@ -110,23 +111,24 @@ function AppRoutes() {
       <Route path="/admin/exam-results" element={<PrivateRoute roles={['admin']}><ExamResultsPage /></PrivateRoute>} />
 
       <Route path="/admin/exam-results" element={<PrivateRoute roles={['admin']}><ExamResultsPage /></PrivateRoute>} />
-<Route path="/admin/exam-results/:assignmentId" element={<PrivateRoute roles={['admin']}><ExamAssignmentPage /></PrivateRoute>} />
-<Route path="/admin/exam-results/:assignmentId/:submissionId" element={<PrivateRoute roles={['admin']}><ExamSubmissionPage /></PrivateRoute>} />
+      <Route path="/admin/exam-results/:assignmentId" element={<PrivateRoute roles={['admin']}><ExamAssignmentPage /></PrivateRoute>} />
+      <Route path="/admin/exam-results/:assignmentId/:submissionId" element={<PrivateRoute roles={['admin']}><ExamSubmissionPage /></PrivateRoute>} />
 
-<Route path="/exam-verify" element={<ExamVerifyPage />} />
-<Route path="/exam-done"   element={<ExamDonePage />} />
-<Route path="/proposals"
-  element={<PrivateRoute roles={['admin','chairman','director']}><ProposalsPage /></PrivateRoute>}
-/>
-<Route path="/proposals/:id/results"
-  element={<PrivateRoute roles={['admin','chairman','director']}><ProposalResultsPage /></PrivateRoute>}
-/>
-<Route path="/my-proposals"
-  element={<PrivateRoute><MyProposalsPage /></PrivateRoute>}
-/>
-<Route path="/my-proposals/:id/take"
-  element={<PrivateRoute><TakeProposalPage /></PrivateRoute>}
-/>
+      <Route path="/exam-verify" element={<ExamVerifyPage />} />
+      <Route path="/exam-done" element={<ExamDonePage />} />
+      <Route path="/evaluation/:id/review" element={<ManagerReviewPage />} />
+      <Route path="/proposals"
+        element={<PrivateRoute roles={['admin', 'chairman', 'director']}><ProposalsPage /></PrivateRoute>}
+      />
+      <Route path="/proposals/:id/results"
+        element={<PrivateRoute roles={['admin', 'chairman', 'director']}><ProposalResultsPage /></PrivateRoute>}
+      />
+      <Route path="/my-proposals"
+        element={<PrivateRoute><MyProposalsPage /></PrivateRoute>}
+      />
+      <Route path="/my-proposals/:id/take"
+        element={<PrivateRoute><TakeProposalPage /></PrivateRoute>}
+      />
     </Routes>
   );
 }
