@@ -1,340 +1,593 @@
 // ══════════════════════════════════════════════
-//  ManagerReviewPage.scss
+//  ManagerReviewPage.scss — Modern Redesign
+//  Font: Plus Jakarta Sans
 // ══════════════════════════════════════════════
 
-$brand-red:      #c0392b;
-$brand-red-dark: #922b21;
-$brand-red-soft: #fdf2f2;
-$gold:           #e67e22;
-$gold-dark:      #ca6f1e;
-$yellow:         #f59e0b;
-$yellow-soft:    #fffbeb;
-$yellow-border:  #fcd34d;
-$green:          #16a34a;
-$green-soft:     #f0fdf4;
-$green-border:   #86efac;
-$success:        #27ae60;
-$warning-bg:     #fff8e1;
-$warning-border: #ffe082;
-$gray-50:        #f9fafb;
-$gray-100:       #f3f4f6;
-$gray-200:       #e5e7eb;
-$gray-400:       #9ca3af;
-$gray-600:       #4b5563;
-$gray-800:       #1f2937;
-$white:          #ffffff;
+$font:        'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 
-// ── Animations ─────────────────────────────────
-@keyframes pulse-yellow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba($yellow, 0.5); }
-  50%       { box-shadow: 0 0 0 4px rgba($yellow, 0.2); }
+$red:         #c0392b;
+$red-dark:    #922b21;
+$red-soft:    #fdf2f2;
+$green:       #16a34a;
+$green-soft:  #f0fdf4;
+$green-bd:    #86efac;
+$yellow:      #f59e0b;
+$yellow-soft: #fffbeb;
+$yellow-bd:   #fcd34d;
+$teal:        #0d9488;
+$blue:        #2563eb;
+$orange:      #ea580c;
+
+$gray-50:  #f9fafb;
+$gray-100: #f3f4f6;
+$gray-200: #e5e7eb;
+$gray-300: #d1d5db;
+$gray-400: #9ca3af;
+$gray-500: #6b7280;
+$gray-600: #4b5563;
+$gray-700: #374151;
+$gray-800: #1f2937;
+$white:    #ffffff;
+
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba($yellow, 0.4); }
+  50%       { box-shadow: 0 0 0 4px rgba($yellow, 0.12); }
 }
 
-// ══════════════════════════════════════════════
-//  INPUT SỐ QUẢN LÝ CHẤM
-//  - Chưa điền  → viền vàng + nền vàng nhạt + pulse
-//  - Đã điền    → viền xanh lá + nền xanh nhạt
-// ══════════════════════════════════════════════
-.score-number-input {
-  width: 72px;
-  padding: 6px 8px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
-  color: $gray-800;
-  transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
-  display: block;
-  margin: 0 auto;
+// ── Base font ─────────────────────────────────
+.review-page,
+.review-page * {
+  font-family: $font;
+}
 
-  // Ẩn spinner
+// ── Page wrapper ─────────────────────────────
+.review-page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+// ── Employee card ─────────────────────────────
+.emp-card {
+  background: $white;
+  border: 1px solid $gray-200;
+  border-radius: 14px;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.emp-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;           // rounded square thay vì circle
+  background: $red;
+  color: $white;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.emp-info {
+  flex: 1;
+  min-width: 0;
+
+  .emp-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: $gray-800;
+    letter-spacing: -0.2px;
+    margin-bottom: 5px;
+  }
+
+  .emp-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      color: $gray-400;
+
+      svg { color: $gray-300; }
+    }
+  }
+}
+
+.emp-period {
+  text-align: right;
+  flex-shrink: 0;
+
+  .period-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: $gray-400;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 3px;
+  }
+
+  .period-val {
+    font-size: 15px;
+    font-weight: 800;
+    color: $red;
+    letter-spacing: -0.3px;
+  }
+}
+
+// ── Score summary bar ─────────────────────────
+.score-summary-bar {
+  background: $white;
+  border: 1px solid $gray-200;
+  border-radius: 14px;
+  padding: 14px 22px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.ss-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+
+  .ss-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: $gray-400;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  .ss-val {
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1px;
+
+    &.self { color: $gray-600; }
+    &.mgr  { color: $red; }
+  }
+
+  .ss-rank {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;            // pill square thay vì circle
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0;
+
+    &.rank-green  { background: $green-soft;  color: $green;  border: 1.5px solid $green-bd; }
+    &.rank-teal   { background: #f0fdfa;       color: $teal;   border: 1.5px solid #99f6e4; }
+    &.rank-blue   { background: #eff6ff;       color: $blue;   border: 1.5px solid #bfdbfe; }
+    &.rank-orange { background: #fff7ed;       color: $orange; border: 1.5px solid #fed7aa; }
+    &.rank-red    { background: $red-soft;     color: $red;    border: 1.5px solid #fca5a5; }
+  }
+}
+
+.ss-divider {
+  width: 1px;
+  height: 32px;
+  background: $gray-200;
+  margin: 0 22px;
+}
+
+.ss-missing {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: $yellow-soft;
+  border: 1px solid $yellow-bd;
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: darken($yellow, 20%);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  margin-left: 12px;
+
+  svg { color: $yellow; }
+}
+
+// ── Section title ─────────────────────────────
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: $red;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+
+  .required { color: $red; margin-left: 3px; }
+}
+
+// ── Score list ────────────────────────────────
+.score-section {
+  background: $white;
+  border: 1px solid $gray-200;
+  border-radius: 14px;
+  padding: 18px 22px;
+}
+
+.score-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid $gray-100;
+  position: relative;
+
+  &:last-child { border-bottom: none; }
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: -22px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: transparent;
+    transition: background 0.2s;
+  }
+
+  &.filled::before { background: $green; }
+  &.empty::before  { background: $yellow-bd; }
+}
+
+.row-index {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;             // square badge
+  background: $gray-100;
+  color: $gray-400;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.row-body {
+  flex: 1;
+  min-width: 0;
+
+  .row-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: $gray-800;
+    letter-spacing: -0.1px;
+    margin-bottom: 6px;
+  }
+
+  .row-desc {
+    font-size: 12px;
+    font-weight: 400;
+    color: $gray-400;
+    margin-bottom: 4px;
+    line-height: 1.5;
+  }
+
+  .row-achievement {
+    font-size: 12px;
+    font-weight: 500;
+    color: $green;
+    font-style: italic;
+    margin-bottom: 6px;
+  }
+
+  .note-input {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid $gray-200;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 400;
+    font-family: $font;
+    color: $gray-700;
+    background: $gray-50;
+    box-sizing: border-box;
+    transition: border-color 0.15s, background 0.15s;
+
+    &:focus {
+      outline: none;
+      border-color: $gray-300;
+      background: $white;
+    }
+
+    &::placeholder {
+      color: $gray-300;
+      font-weight: 400;
+    }
+  }
+}
+
+.row-scores {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.self-score-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: $gray-500;
+  background: $gray-100;
+  border-radius: 6px;
+  padding: 4px 9px;
+  white-space: nowrap;
+  letter-spacing: -0.2px;
+}
+
+.score-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  .score-max {
+    font-size: 11px;
+    font-weight: 500;
+    color: $gray-400;
+  }
+}
+
+// ── Number input ──────────────────────────────
+.score-input {
+  width: 62px;
+  padding: 6px 6px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: $font;
+  text-align: center;
+  letter-spacing: -0.3px;
+  color: $gray-800;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+
   &::-webkit-outer-spin-button,
   &::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   &[type=number] { -moz-appearance: textfield; }
 
-  // ── Chưa điền (mặc định) → VÀNG ──
-  border: 2px solid $yellow-border;
+  border: 1.5px solid $yellow-bd;
   background: $yellow-soft;
-  animation: pulse-yellow 2.2s ease-in-out infinite;
+  animation: pulse-ring 2.5s ease-in-out infinite;
 
   &:focus {
     outline: none;
     border-color: $yellow;
-    box-shadow: 0 0 0 3px rgba($yellow, 0.25);
+    box-shadow: 0 0 0 3px rgba($yellow, 0.18);
     animation: none;
   }
 
-  // ── Đã điền → XANH LÁ ──
   &.score-filled {
-    border: 2px solid $green-border;
+    border: 1.5px solid $green-bd;
     background: $green-soft;
-    animation: none;
     color: $green;
+    animation: none;
 
     &:focus {
       border-color: $green;
-      box-shadow: 0 0 0 3px rgba($green, 0.2);
+      box-shadow: 0 0 0 3px rgba($green, 0.13);
     }
   }
 }
 
-.score-max-hint {
-  font-size: 12px;
-  color: $gray-400;
-  display: block;
-  text-align: center;
-  margin-top: 3px;
+// ── Comment sections ──────────────────────────
+.comment-section {
+  background: $white;
+  border: 1px solid $gray-200;
+  border-radius: 14px;
+  padding: 18px 22px;
 }
 
-// ── Ghi chú tiêu chí — bình thường, không validate ──
-.note-text-input {
+.comment-readonly {
+  font-size: 13.5px;
+  font-weight: 400;
+  color: $gray-500;
+  line-height: 1.7;
+  font-style: italic;
+  background: $gray-50;
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-height: 40px;
+}
+
+.mgr-textarea {
   width: 100%;
-  padding: 6px 10px;
-  border: 1.5px solid $gray-200;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 400;
+  font-family: $font;
   color: $gray-800;
-  background: $white;
-  transition: border-color 0.2s;
+  line-height: 1.65;
+  resize: vertical;
+  min-height: 88px;
   box-sizing: border-box;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+
+  &::placeholder {
+    color: $gray-300;
+    font-weight: 400;
+  }
+
+  border: 1.5px solid $yellow-bd;
+  background: $yellow-soft;
+  animation: pulse-ring 2.5s ease-in-out infinite;
 
   &:focus {
     outline: none;
-    border-color: $gold;
-    box-shadow: 0 0 0 3px rgba($gold, 0.12);
-  }
-  &::placeholder { color: $gray-400; }
-}
-
-// ══════════════════════════════════════════════
-//  TEXTAREA NHẬN XÉT TỔNG QUÁT
-//  - Chưa điền  → viền vàng + nền vàng nhạt
-//  - Đã điền    → viền xanh lá + nền xanh nhạt
-// ══════════════════════════════════════════════
-.manager-review-comment {
-  margin: 8px 0 16px;
-
-  .review-label {
-    display: block;
-    font-weight: 700;
-    font-size: 13px;
-    color: $brand-red;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 8px;
+    border-color: $yellow;
+    box-shadow: 0 0 0 3px rgba($yellow, 0.18);
+    animation: none;
   }
 
-  .form-textarea {
-    width: 100%;
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 14px;
-    color: $gray-800;
-    resize: vertical;
-    min-height: 90px;
-    transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
-    box-sizing: border-box;
-
-    &::placeholder { color: $gray-400; }
-
-    // Chưa điền → vàng (mặc định)
-    border: 2px solid $yellow-border;
-    background: $yellow-soft;
-    animation: pulse-yellow 2.2s ease-in-out infinite;
+  &.is-filled {
+    border: 1.5px solid $green-bd;
+    background: $green-soft;
+    animation: none;
 
     &:focus {
-      outline: none;
-      border-color: $yellow;
-      box-shadow: 0 0 0 3px rgba($yellow, 0.2);
-      animation: none;
+      border-color: $green;
+      box-shadow: 0 0 0 3px rgba($green, 0.13);
+    }
+  }
+
+  &.reject {
+    border-color: #fca5a5;
+    background: $red-soft;
+    animation: none;
+
+    &:focus {
+      border-color: $red;
+      box-shadow: 0 0 0 3px rgba($red, 0.1);
     }
 
-    // Đã điền → xanh
-    &.textarea-filled {
-      border: 2px solid $green-border;
-      background: $green-soft;
-      animation: none;
-
-      &:focus {
-        border-color: $green;
-        box-shadow: 0 0 0 3px rgba($green, 0.2);
-      }
+    &.is-filled {
+      border-color: #fca5a5;
+      background: $red-soft;
     }
   }
 }
 
-// ── Bảng chấm điểm ────────────────────────────
-.kpi-score-table.full-scores {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 16px 0;
-  font-size: 14px;
-
-  thead tr {
-    background: $brand-red;
-    color: $white;
-
-    th {
-      padding: 10px 12px;
-      text-align: center;
-      font-weight: 600;
-      font-size: 13px;
-      border: 1px solid $brand-red-dark;
-
-      &:nth-child(2) { text-align: left; }
-    }
-  }
-
-  tbody {
-    tr {
-      border-bottom: 1px solid $gray-200;
-      transition: background 0.15s;
-      &:hover { background: $gray-50; }
-
-      &.total-row {
-        background: $brand-red !important;
-        color: $white;
-        font-weight: 700;
-
-        td {
-          padding: 10px 12px;
-          text-align: center;
-          border: 1px solid $brand-red-dark;
-          font-size: 15px;
-        }
-        .total-label { text-align: left; font-size: 13px; }
-      }
-
-      &.rank-row {
-        background: $gray-100;
-        font-weight: 700;
-
-        td {
-          padding: 8px 12px;
-          text-align: center;
-          border: 1px solid $gray-200;
-          font-size: 14px;
-          color: $brand-red;
-        }
-        .rank-label { text-align: left; color: $gray-800; }
-      }
-    }
-
-    td {
-      padding: 10px 12px;
-      border: 1px solid $gray-200;
-      vertical-align: middle;
-    }
-  }
-
-  .stt-cell       { text-align: center; width: 44px; color: $gray-600; }
-  .criteria-cell  { text-align: left; min-width: 180px; }
-  .criteria-name  { font-weight: 600; color: $gray-800; margin-bottom: 2px; }
-  .criteria-desc  { font-size: 12px; color: $gray-400; margin-bottom: 4px; }
-  .achievement-value {
-    font-size: 12px; color: $success;
-    margin-top: 4px; font-style: italic;
-  }
-  .max-score-cell   { text-align: center; color: $gray-600; width: 80px; }
-  .self-score-value { text-align: center; font-weight: 600; color: $brand-red; width: 100px; }
-  .mgr-score-cell   { text-align: center; width: 120px; }
-  .mgr-note-cell    { min-width: 160px; }
-  .mgr-input-col    { width: 120px; }
+// ── Reject section ────────────────────────────
+.reject-section {
+  background: $white;
+  border: 1.5px solid #fca5a5;
+  border-radius: 14px;
+  padding: 18px 22px;
 }
 
-// ── Nhận xét nhân viên (read-only) ───────────
-.comment-table.full-comments {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 8px 0 16px;
+.reject-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fffbeb;
+  border: 1px solid $yellow-bd;
+  border-radius: 8px;
+  padding: 9px 13px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: darken($yellow, 22%);
+  margin-bottom: 14px;
 
-  td {
-    padding: 10px 14px;
+  svg { color: $yellow; flex-shrink: 0; }
+}
+
+// ── Action bar ────────────────────────────────
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.action-right {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: $font;
+  letter-spacing: -0.1px;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s, transform 0.1s, opacity 0.15s;
+  white-space: nowrap;
+
+  &:active { transform: scale(0.97); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &.ghost {
+    background: $gray-100;
+    color: $gray-600;
     border: 1px solid $gray-200;
-    font-size: 14px;
+
+    &:hover:not(:disabled) { background: $gray-200; }
   }
 
-  .comment-cell {
-    background: $gray-50;
+  &.danger {
+    background: $red-soft;
+    color: $red;
+    border: 1.5px solid #fca5a5;
 
-    .comment-title {
-      font-weight: 600; font-size: 13px;
-      color: $brand-red; margin-bottom: 6px;
-      text-transform: uppercase; letter-spacing: 0.02em;
-    }
-    .comment-content {
-      color: $gray-800; font-style: italic;
-      line-height: 1.6; min-height: 32px;
-    }
-  }
-}
-
-// ── Form từ chối ──────────────────────────────
-.reject-form-box {
-  background: $warning-bg;
-  border: 1.5px solid $warning-border;
-  border-radius: 10px;
-  padding: 16px 20px;
-  margin-bottom: 20px;
-
-  .alert-warning {
-    background: #fff3cd; border: 1px solid #ffc107;
-    border-radius: 6px; padding: 10px 14px;
-    font-size: 13px; color: #856404; margin-bottom: 14px;
+    &:hover:not(:disabled) { background: #fce4e4; }
   }
 
-  .form-label {
-    display: block; font-weight: 600;
-    font-size: 13px; color: $gray-800; margin-bottom: 6px;
-  }
+  &.approve {
+    background: $red;
+    color: $white;
+    border: 1.5px solid $red-dark;
 
-  .form-textarea {
-    width: 100%; padding: 10px 14px;
-    border: 1.5px solid $warning-border; border-radius: 8px;
-    font-size: 14px; color: $gray-800;
-    resize: vertical; min-height: 100px;
-    background: $white; box-sizing: border-box;
-    transition: border-color 0.2s, box-shadow 0.2s;
-
-    &:focus {
-      outline: none;
-      border-color: $brand-red;
-      box-shadow: 0 0 0 3px rgba($brand-red, 0.12);
-    }
-    &::placeholder { color: $gray-400; }
+    &:hover:not(:disabled) { background: $red-dark; }
   }
 }
 
-// ── Action bar cuối trang ─────────────────────
-.review-action-bar {
-  display: flex; gap: 12px;
-  justify-content: flex-end; align-items: center;
-  padding: 20px 0 8px;
-  border-top: 1px solid $gray-200; margin-top: 8px;
-}
+// ══ MOBILE ≤ 640px ════════════════════════════
+@media (max-width: 640px) {
 
-// ── Live score preview ────────────────────────
-.live-score-preview {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: $gray-100; border: 1px solid $gray-200;
-  border-radius: 20px; padding: 4px 14px;
-  font-size: 13px; color: $gray-600; margin-left: 12px;
+  .review-page { padding: 12px 12px 32px; gap: 12px; }
 
-  .score-val { font-weight: 700; font-size: 15px; color: $brand-red; }
+  .emp-card { padding: 13px 15px; gap: 12px; flex-wrap: wrap; }
 
-  .rank-badge {
-    font-weight: 700; font-size: 13px;
-    background: $brand-red; color: $white;
-    border-radius: 50%; width: 24px; height: 24px;
-    display: flex; align-items: center; justify-content: center;
+  .emp-avatar { width: 40px; height: 40px; font-size: 16px; border-radius: 10px; }
+
+  .emp-period { width: 100%; text-align: left; border-top: 1px solid $gray-100; padding-top: 8px; }
+
+  .score-summary-bar {
+    padding: 12px 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .ss-divider { display: none; }
   }
-}
 
-// ── Missing badge ─────────────────────────────
-.missing-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: $yellow-soft; border: 1px solid $yellow-border;
-  border-radius: 20px; padding: 3px 12px;
-  font-size: 12px; font-weight: 600; color: darken($yellow, 15%);
-  margin-left: 10px;
+  .ss-item { flex: 0 0 auto; }
+  .ss-missing { margin-left: 0; }
+
+  .score-section,
+  .comment-section,
+  .reject-section { padding: 13px 15px; }
+
+  .score-row { gap: 8px; }
+
+  .score-input { width: 54px; font-size: 14px; padding: 5px 4px; }
+
+  .action-bar { flex-wrap: wrap; gap: 8px; }
+  .action-right { width: 100%; justify-content: flex-end; }
+
+  .btn-action { font-size: 12px; padding: 8px 14px; }
 }
