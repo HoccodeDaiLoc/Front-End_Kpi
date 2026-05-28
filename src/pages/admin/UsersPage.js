@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import Header from '../../components/layout/Header';
 import { getUsers, updateUser, deleteUser, resendActivation, getManagers } from '../../api/users';
 import { createAccount } from '../../api/auth';
@@ -9,11 +10,12 @@ import Pagination from '../../components/common/Pagination';
 import { RoleBadge } from '../../components/common/Badge';
 import { formatDate, getRoleLabel } from '../../utils/helpers';
 import toast from 'react-hot-toast';
-import { Plus, Search, Edit2, Trash2, Mail } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Mail, Building2, ChevronDown } from 'lucide-react';
 import './UsersPage.scss';
 
 const ROLES = ['employee', 'manager', 'director', 'admin', 'chairman'];
 
+// ── Xây dựng cây phòng ban phẳng (giữ nguyên từ trước) ──────────────────────
 function buildDeptOptions(depts) {
   const map = {};
   const roots = [];
@@ -31,6 +33,7 @@ function buildDeptOptions(depts) {
   return result;
 }
 
+// ── DeptSelect dùng cho form (chọn theo tên) ─────────────────────────────────
 function DeptSelect({ value, onChange, depts, placeholder = 'Chọn phòng ban' }) {
   const options = buildDeptOptions(depts);
   return (
@@ -45,12 +48,186 @@ function DeptSelect({ value, onChange, depts, placeholder = 'Chọn phòng ban' 
   );
 }
 
+// ── DeptTreeFilter — dropdown cây dùng để lọc danh sách ──────────────────────
+// Dùng Portal để render dropdown ra document.body → thoát khỏi overflow:hidden của card
+function DeptTreeFilter({ value, onChange, depts }) {
+  const [open, setOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState({});
+  const btnRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const options = buildDeptOptions(depts);
+
+  const selectedDept = depts.find(d => d.id === value);
+  const label = selectedDept ? selectedDept.name : 'Tất cả phòng ban';
+
+  // Tính vị trí dropdown dựa theo button
+  const calcPosition = () => {
+    if (!btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const dropdownH = Math.min(320, (options.length + 1) * 36 + 8);
+
+    // Mở lên trên nếu không đủ chỗ bên dưới
+    const openUpward = spaceBelow < dropdownH && spaceAbove > spaceBelow;
+
+    setDropdownStyle({
+      position: 'fixed',
+      left: rect.left,
+      width: Math.max(rect.width, 260),
+      maxWidth: 380,
+      zIndex: 9999,
+      ...(openUpward
+        ? { bottom: window.innerHeight - rect.top + 4 }
+        : { top: rect.bottom + 4 }
+      )
+    });
+  };
+
+  const handleToggle = () => {
+    if (!open) calcPosition();
+    setOpen(o => !o);
+  };
+
+  // Click outside
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (
+        btnRef.current && !btnRef.current.contains(e.target) &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target)
+      ) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  // Reposition on scroll/resize
+  useEffect(() => {
+    if (!open) return;
+    const handler = () => calcPosition();
+    window.addEventListener('scroll', handler, true);
+    window.addEventListener('resize', handler);
+    return () => {
+      window.removeEventListener('scroll', handler, true);
+      window.removeEventListener('resize', handler);
+    };
+  }, [open]);
+
+  const dropdown = open && ReactDOM.createPortal(
+    <div
+      ref={dropdownRef}
+      style={{
+        ...dropdownStyle,
+        maxHeight: 320, overflowY: 'auto', overflowX: 'hidden',
+        background: 'var(--bg-card, #fff)',
+        border: '1px solid var(--border)',
+        borderRadius: 8,
+        boxShadow: '0 8px 24px rgba(0,0,0,0.14)',
+        padding: '4px 0',
+      }}
+    >
+      {/* Option "Tất cả" */}
+      <div
+        onClick={() => { onChange(''); setOpen(false); }}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '8px 14px', cursor: 'pointer', fontSize: 13,
+          whiteSpace: 'nowrap',
+          background: !value ? 'var(--primary-50, #eff6ff)' : '',
+          color: !value ? 'var(--primary)' : 'var(--text-1)',
+          fontWeight: !value ? 600 : 400,
+          borderBottom: '1px solid var(--border)',
+          transition: 'background 0.15s',
+        }}
+        onMouseEnter={e => { if (value) e.currentTarget.style.background = 'var(--bg-hover, #f5f5f5)'; }}
+        onMouseLeave={e => { if (value) e.currentTarget.style.background = ''; }}
+      >
+        <Building2 size={13} style={{ flexShrink: 0 }} />
+        <span>Tất cả phòng ban</span>
+      </div>
+
+      {/* Cây phòng ban */}
+      {options.map(o => (
+        <div
+          key={o.id}
+          onClick={() => { onChange(o.id); setOpen(false); }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: `7px 12px 7px ${14 + o.level * 18}px`,
+            cursor: 'pointer', fontSize: 13,
+            whiteSpace: 'nowrap',
+            background: value === o.id ? 'var(--primary-50, #eff6ff)' : '',
+            color: value === o.id ? 'var(--primary)' : 'var(--text-1)',
+            fontWeight: value === o.id ? 600 : o.level === 0 ? 500 : 400,
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={e => { if (value !== o.id) e.currentTarget.style.background = 'var(--bg-hover, #f5f5f5)'; }}
+          onMouseLeave={e => { if (value !== o.id) e.currentTarget.style.background = ''; }}
+        >
+          {o.level > 0 && (
+            <span style={{ color: 'var(--text-3)', fontSize: 11, flexShrink: 0 }}>└</span>
+          )}
+          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {o.name}
+          </span>
+          {o.level === 0 && (
+            <span style={{
+              flexShrink: 0, fontSize: 10, padding: '1px 6px', borderRadius: 10, marginLeft: 6,
+              background: 'var(--bg-muted, #f1f5f9)', color: 'var(--text-3)',
+              fontWeight: 500, letterSpacing: '0.02em',
+            }}>
+              Cấp cha
+            </span>
+          )}
+        </div>
+      ))}
+    </div>,
+    document.body
+  );
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        ref={btnRef}
+        type="button"
+        className={`dept-tree-btn form-select${value ? ' dept-tree-btn--active' : ''}`}
+        onClick={handleToggle}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+          width: 200, textAlign: 'left',
+          background: value ? 'var(--primary-50, #eff6ff)' : '',
+          borderColor: value ? 'var(--primary)' : '',
+        }}
+      >
+        <Building2 size={14} style={{ flexShrink: 0, color: value ? 'var(--primary)' : 'var(--text-3)' }} />
+        <span style={{
+          flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          color: value ? 'var(--primary)' : 'var(--text-2)', fontWeight: value ? 500 : 400,
+        }}>
+          {label}
+        </span>
+        <ChevronDown
+          size={13}
+          style={{
+            flexShrink: 0, opacity: 0.5,
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.18s ease',
+          }}
+        />
+      </button>
+      {dropdown}
+    </div>
+  );
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
+  const [deptFilter, setDeptFilter] = useState('');   // ← MỚI: ID phòng ban
   const [modal, setModal] = useState(null);
   const [selected, setSelected] = useState(null);
   const [form, setForm] = useState({
@@ -70,34 +247,35 @@ export default function UsersPage() {
   // ── Tự động resolve directorId khi chọn phòng ban ──────────────────────────
   const resolveDirectorIdFromDept = useCallback((deptName) => {
     if (!deptName || depts.length === 0) return '';
-
-    const selected = depts.find(d => d.name === deptName);
-    if (!selected) return '';
-
-    if (selected.parentId) {
-      // Phòng con → lấy headId của phòng cha
-      const parent = depts.find(d => d.id === selected.parentId);
+    const sel = depts.find(d => d.name === deptName);
+    if (!sel) return '';
+    if (sel.parentId) {
+      const parent = depts.find(d => d.id === sel.parentId);
       return parent?.headId || '';
     }
-    // Phòng gốc → lấy headId của chính nó
-    return selected.headId || '';
+    return sel.headId || '';
   }, [depts]);
 
-  // Khi chọn phòng ban → tự điền directorId
   const handleDeptChange = (deptName) => {
     const directorId = resolveDirectorIdFromDept(deptName);
     setForm(f => ({ ...f, department: deptName, directorId }));
   };
 
+  // ── Load users — truyền thêm departmentId ────────────────────────────────
   const load = useCallback(async (page = 1) => {
     setLoading(true);
     try {
-      const res = await getUsers({ page, limit: 15, search, role: roleFilter });
+      const res = await getUsers({
+        page, limit: 15,
+        search,
+        role: roleFilter,
+        departmentId: deptFilter,   // ← MỚI
+      });
       setUsers(res.data.data);
       setPagination(res.data.pagination);
     } catch { toast.error('Không tải được danh sách user'); }
     finally { setLoading(false); }
-  }, [search, roleFilter]);
+  }, [search, roleFilter, deptFilter]);   // ← thêm deptFilter vào deps
 
   useEffect(() => { load(1); }, [load]);
 
@@ -178,7 +356,6 @@ export default function UsersPage() {
     </div>
   );
 
-  // DirectorDisplay: tự động điền, vẫn cho phép override thủ công
   const DirectorDisplay = () => (
     <div className="form-group">
       <label className="form-label">
@@ -210,24 +387,79 @@ export default function UsersPage() {
     </div>
   );
 
+  // Số filter đang active (để hiển thị badge)
+  const activeFilterCount = [roleFilter, deptFilter].filter(Boolean).length;
+
   return (
     <>
-      <Header title="Quản lý User" subtitle={`${pagination.total} tài khoản`}
-        actions={<button className="btn btn-primary btn-sm" onClick={openCreate}><Plus size={14} /> Thêm user</button>} />
+      <Header
+        title="Quản lý User"
+        subtitle={`${pagination.total} tài khoản`}
+        actions={
+          <button className="btn btn-primary btn-sm" onClick={openCreate}>
+            <Plus size={14} /> Thêm user
+          </button>
+        }
+      />
 
       <div className="page-content users-page">
         <div className="card">
           <div className="card-header">
-            <div className="filter-bar" style={{ margin: 0 }}>
+            <div className="filter-bar" style={{ margin: 0, flexWrap: 'wrap', gap: 8 }}>
+              {/* Search */}
               <div style={{ position: 'relative' }}>
-                <Search size={15} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)' }} />
-                <input className="form-input" placeholder="Tìm kiếm..." value={search}
-                  onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 36, width: 240 }} />
+                <Search
+                  size={15}
+                  style={{
+                    position: 'absolute', left: 10, top: '50%',
+                    transform: 'translateY(-50%)', color: 'var(--text-3)'
+                  }}
+                />
+                <input
+                  className="form-input"
+                  placeholder="Tìm kiếm..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  style={{ paddingLeft: 36, width: 240 }}
+                />
               </div>
-              <select className="form-select" style={{ width: 160 }} value={roleFilter} onChange={e => setRoleFilter(e.target.value)}>
+
+              {/* Lọc vai trò */}
+              <select
+                className="form-select"
+                style={{ width: 160 }}
+                value={roleFilter}
+                onChange={e => setRoleFilter(e.target.value)}
+              >
                 <option value="">Tất cả vai trò</option>
                 {ROLES.map(r => <option key={r} value={r}>{getRoleLabel(r)}</option>)}
               </select>
+
+              {/* ── MỚI: Lọc phòng ban dạng cây ── */}
+              <DeptTreeFilter
+                value={deptFilter}
+                onChange={setDeptFilter}
+                depts={depts}
+              />
+
+              {/* Nút xóa filter nếu có */}
+              {activeFilterCount > 0 && (
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => { setRoleFilter(''); setDeptFilter(''); }}
+                  style={{ fontSize: 12, color: 'var(--text-3)', gap: 4 }}
+                >
+                  ✕ Xóa bộ lọc
+                  <span style={{
+                    background: 'var(--danger)', color: '#fff',
+                    borderRadius: '50%', width: 16, height: 16,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 10, fontWeight: 700, marginLeft: 2
+                  }}>
+                    {activeFilterCount}
+                  </span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -264,13 +496,23 @@ export default function UsersPage() {
                         <td className="text-sm text-muted">{formatDate(u.createdAt)}</td>
                         <td>
                           <div className="flex gap-2">
-                            <button className="btn btn-ghost btn-sm btn-icon" onClick={() => openEdit(u)}><Edit2 size={14} /></button>
+                            <button className="btn btn-ghost btn-sm btn-icon" onClick={() => openEdit(u)}>
+                              <Edit2 size={14} />
+                            </button>
                             {!u.isActive && (
-                              <button className="btn btn-ghost btn-sm btn-icon" title="Gửi lại email" onClick={() => handleResend(u.id)}>
+                              <button
+                                className="btn btn-ghost btn-sm btn-icon"
+                                title="Gửi lại email"
+                                onClick={() => handleResend(u.id)}
+                              >
                                 <Mail size={14} />
                               </button>
                             )}
-                            <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={() => setConfirmDelete(u)}>
+                            <button
+                              className="btn btn-ghost btn-sm btn-icon"
+                              style={{ color: 'var(--danger)' }}
+                              onClick={() => setConfirmDelete(u)}
+                            >
                               <Trash2 size={14} />
                             </button>
                           </div>

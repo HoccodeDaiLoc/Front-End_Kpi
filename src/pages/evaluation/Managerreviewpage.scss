@@ -322,10 +322,6 @@ $white:    #ffffff;
   }
 }
 
-// ── Cột điểm ─────────────────────────────────
-// flex-shrink: 0 → không bao giờ bị co
-// align-self: flex-end → luôn căn xuống đáy row,
-//   tức là ngang hàng với .note-input dù body cao thấp bao nhiêu
 .row-scores {
   display: flex;
   flex-direction: row;
