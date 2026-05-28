@@ -1,9 +1,7 @@
-
-
 $font:        'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 
-$red:         #c0392b;
-$red-dark:    #922b21;
+$red:         #ff1900;
+$red-dark:    #ff1500;
 $red-soft:    #fdf2f2;
 $green:       #16a34a;
 $green-soft:  #f0fdf4;
@@ -31,13 +29,12 @@ $white:    #ffffff;
   50%       { box-shadow: 0 0 0 4px rgba($yellow, 0.12); }
 }
 
-// ── Base font ─────────────────────────────────
 .review-page,
 .review-page * {
   font-family: $font;
+  box-sizing: border-box;
 }
 
-// ── Page wrapper ─────────────────────────────
 .review-page {
   max-width: 780px;
   margin: 0 auto;
@@ -61,7 +58,7 @@ $white:    #ffffff;
 .emp-avatar {
   width: 46px;
   height: 46px;
-  border-radius: 12px;           // rounded square thay vì circle
+  border-radius: 12px;
   background: $red;
   color: $white;
   font-size: 18px;
@@ -163,7 +160,7 @@ $white:    #ffffff;
   .ss-rank {
     width: 24px;
     height: 24px;
-    border-radius: 6px;            // pill square thay vì circle
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -229,11 +226,15 @@ $white:    #ffffff;
   flex-direction: column;
 }
 
+// ── Score row ─────────────────────────────────
+// Layout: [index] [body flex-1] [scores]
+// align-items: flex-start → tất cả căn theo đỉnh,
+// rồi .row-scores dùng margin-top tự căn với .note-input
 .score-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;   // ← căn theo đỉnh, không stretch
   gap: 12px;
-  padding: 13px 0;
+  padding: 14px 0;
   border-bottom: 1px solid $gray-100;
   position: relative;
 
@@ -257,7 +258,7 @@ $white:    #ffffff;
 .row-index {
   width: 22px;
   height: 22px;
-  border-radius: 6px;             // square badge
+  border-radius: 6px;
   background: $gray-100;
   color: $gray-400;
   font-size: 11px;
@@ -266,25 +267,28 @@ $white:    #ffffff;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: 1px;  // optical align với text line đầu tiên
 }
 
 .row-body {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 
   .row-name {
     font-size: 13.5px;
     font-weight: 600;
     color: $gray-800;
     letter-spacing: -0.1px;
-    margin-bottom: 6px;
+    line-height: 1.45;
   }
 
   .row-desc {
     font-size: 12px;
     font-weight: 400;
     color: $gray-400;
-    margin-bottom: 4px;
     line-height: 1.5;
   }
 
@@ -293,7 +297,6 @@ $white:    #ffffff;
     font-weight: 500;
     color: $green;
     font-style: italic;
-    margin-bottom: 6px;
   }
 
   .note-input {
@@ -302,11 +305,9 @@ $white:    #ffffff;
     border: 1px solid $gray-200;
     border-radius: 7px;
     font-size: 12px;
-    font-weight: 400;
     font-family: $font;
     color: $gray-700;
     background: $gray-50;
-    box-sizing: border-box;
     transition: border-color 0.15s, background 0.15s;
 
     &:focus {
@@ -317,17 +318,22 @@ $white:    #ffffff;
 
     &::placeholder {
       color: $gray-300;
-      font-weight: 400;
     }
   }
 }
 
+// ── Cột điểm ─────────────────────────────────
+// flex-shrink: 0 → không bao giờ bị co
+// align-self: flex-end → luôn căn xuống đáy row,
+//   tức là ngang hàng với .note-input dù body cao thấp bao nhiêu
 .row-scores {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  align-self: flex-end;   // ← KEY: căn ngang với note-input ở đáy body
+  padding-bottom: 1px;    // optical
 }
 
 .self-score-badge {
@@ -587,4 +593,14 @@ $white:    #ffffff;
   .action-right { width: 100%; justify-content: flex-end; }
 
   .btn-action { font-size: 12px; padding: 8px 14px; }
+
+  // ── Header: title + back button cùng hàng ──
+  .header-title {
+    max-width: none !important;   // ghi đè inline style 60vw
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
