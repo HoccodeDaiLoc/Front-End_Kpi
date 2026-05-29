@@ -635,8 +635,10 @@ export default function UsersPage() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Nhân viên</th><th>Vai trò</th><th>Chức vụ</th>
-                  <th>Phòng ban</th><th>Trạng thái</th><th>Ngày tạo</th><th></th>
+                  <th>Nhân viên</th><th>Vai trò</th>
+                  <th style={{ maxWidth: 160 }}>Chức vụ</th>
+                  <th style={{ maxWidth: 160 }}>Phòng ban</th>
+                  <th>Trạng thái</th><th>Ngày tạo</th><th></th>
                 </tr>
               </thead>
               <tbody>
@@ -651,8 +653,22 @@ export default function UsersPage() {
                           <div className="text-sm text-muted">{u.email}</div>
                         </td>
                         <td><RoleBadge role={u.role} /></td>
-                        <td>{u.position || '—'}</td>
-                        <td>{u.department || '—'}</td>
+                        <td style={{ maxWidth: 160 }}>
+                          <div
+                            style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                            title={u.position || ''}
+                          >
+                            {u.position || '—'}
+                          </div>
+                        </td>
+                        <td style={{ maxWidth: 160 }}>
+                          <div
+                            style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                            title={u.department || ''}
+                          >
+                            {u.department || '—'}
+                          </div>
+                        </td>
                         <td>
                           <span className="badge" style={{
                             background: u.isActive ? '#f0fdf4' : '#fef2f2',
