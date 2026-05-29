@@ -15,7 +15,7 @@ import './UsersPage.scss';
 
 const ROLES = ['employee', 'manager', 'director', 'admin', 'chairman'];
 
-// ── Xây dựng cây phòng ban phẳng (giữ nguyên từ trước) ──────────────────────
+// ── Xây dựng cây phòng ban phẳng ─────────────────────────────────────────────
 function buildDeptOptions(depts) {
   const map = {};
   const roots = [];
@@ -33,7 +33,7 @@ function buildDeptOptions(depts) {
   return result;
 }
 
-// ── DeptSelect dùng cho form (chọn theo tên) ─────────────────────────────────
+// ── DeptSelect dùng cho form ──────────────────────────────────────────────────
 function DeptSelect({ value, onChange, depts, placeholder = 'Chọn phòng ban' }) {
   const options = buildDeptOptions(depts);
   return (
@@ -49,7 +49,6 @@ function DeptSelect({ value, onChange, depts, placeholder = 'Chọn phòng ban' 
 }
 
 // ── DeptTreeFilter — dropdown cây dùng để lọc danh sách ──────────────────────
-// Dùng Portal để render dropdown ra document.body → thoát khỏi overflow:hidden của card
 function DeptTreeFilter({ value, onChange, depts }) {
   const [open, setOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState({});
@@ -60,17 +59,13 @@ function DeptTreeFilter({ value, onChange, depts }) {
   const selectedDept = depts.find(d => d.id === value);
   const label = selectedDept ? selectedDept.name : 'Tất cả phòng ban';
 
-  // Tính vị trí dropdown dựa theo button
   const calcPosition = () => {
     if (!btnRef.current) return;
     const rect = btnRef.current.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceAbove = rect.top;
     const dropdownH = Math.min(320, (options.length + 1) * 36 + 8);
-
-    // Mở lên trên nếu không đủ chỗ bên dưới
     const openUpward = spaceBelow < dropdownH && spaceAbove > spaceBelow;
-
     setDropdownStyle({
       position: 'fixed',
       left: rect.left,
@@ -89,7 +84,6 @@ function DeptTreeFilter({ value, onChange, depts }) {
     setOpen(o => !o);
   };
 
-  // Click outside
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
@@ -102,7 +96,6 @@ function DeptTreeFilter({ value, onChange, depts }) {
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  // Reposition on scroll/resize
   useEffect(() => {
     if (!open) return;
     const handler = () => calcPosition();
@@ -127,7 +120,6 @@ function DeptTreeFilter({ value, onChange, depts }) {
         padding: '4px 0',
       }}
     >
-      {/* Option "Tất cả" */}
       <div
         onClick={() => { onChange(''); setOpen(false); }}
         style={{
@@ -146,8 +138,6 @@ function DeptTreeFilter({ value, onChange, depts }) {
         <Building2 size={13} style={{ flexShrink: 0 }} />
         <span>Tất cả phòng ban</span>
       </div>
-
-      {/* Cây phòng ban */}
       {options.map(o => (
         <div
           key={o.id}
@@ -221,13 +211,201 @@ function DeptTreeFilter({ value, onChange, depts }) {
   );
 }
 
+// ── SearchableUserSelect — dropdown có ô tìm kiếm ────────────────────────────
+// Hiển thị cả tài khoản chưa kích hoạt (chấm đỏ nhỏ để phân biệt)
+function SearchableUserSelect({ value, onChange, options, placeholder = '— Không có —' }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const wrapRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const filtered = options.filter(u =>
+    (u.fullName || '').toLowerCase().includes(query.toLowerCase()) ||
+    (u.position || '').toLowerCase().includes(query.toLowerCase())
+  );
+
+  const selected = options.find(u => u.id === value);
+  const displayLabel = selected
+    ? `${selected.fullName} (${selected.position || getRoleLabel(selected.role)})`
+    : '';
+
+  // Đóng khi click ra ngoài
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const handleOpen = () => {
+    setOpen(true);
+    setQuery('');
+    setTimeout(() => inputRef.current?.focus(), 10);
+  };
+
+  return (
+    <div ref={wrapRef} style={{ position: 'relative' }}>
+      {/* Trigger button */}
+      <button
+        type="button"
+        className="form-select"
+        onClick={() => (open ? setOpen(false) : handleOpen())}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          width: '100%', textAlign: 'left', cursor: 'pointer',
+        }}
+      >
+        <span style={{
+          flex: 1,
+          color: displayLabel ? 'var(--text-1)' : 'var(--text-3)',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {displayLabel || placeholder}
+        </span>
+        {/* Chấm đỏ nếu người được chọn chưa kích hoạt */}
+        {selected && !selected.isActive && (
+          <span
+            title="Tài khoản chưa kích hoạt"
+            style={{
+              width: 7, height: 7, borderRadius: '50%',
+              background: 'var(--danger, #ef4444)', flexShrink: 0,
+            }}
+          />
+        )}
+        <ChevronDown
+          size={13}
+          style={{
+            flexShrink: 0, opacity: 0.5,
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.18s ease',
+          }}
+        />
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+          background: 'var(--bg-card, #fff)',
+          border: '1px solid var(--border)',
+          borderRadius: 10,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.13)',
+          zIndex: 9999,
+          overflow: 'hidden',
+        }}>
+          {/* Search box */}
+          <div style={{ padding: 8, borderBottom: '1px solid var(--border)' }}>
+            <div style={{ position: 'relative' }}>
+              <Search
+                size={13}
+                style={{
+                  position: 'absolute', left: 8, top: '50%',
+                  transform: 'translateY(-50%)', color: 'var(--text-3)',
+                }}
+              />
+              <input
+                ref={inputRef}
+                className="form-input"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Tìm tên hoặc chức vụ..."
+                style={{
+                  paddingLeft: 28, width: '100%', fontSize: 12,
+                  height: 32, boxSizing: 'border-box',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Danh sách options */}
+          <div style={{ maxHeight: 224, overflowY: 'auto' }}>
+            {/* Option "Không có" */}
+            <div
+              onClick={() => { onChange(''); setOpen(false); }}
+              style={{
+                padding: '8px 12px', fontSize: 13, cursor: 'pointer',
+                color: 'var(--text-3)',
+                borderBottom: '1px solid var(--border)',
+                background: !value ? 'var(--primary-50, #eff6ff)' : '',
+                fontWeight: !value ? 600 : 400,
+                transition: 'background 0.12s',
+              }}
+              onMouseEnter={e => { if (value) e.currentTarget.style.background = 'var(--bg-hover, #f5f5f5)'; }}
+              onMouseLeave={e => { if (value) e.currentTarget.style.background = !value ? 'var(--primary-50, #eff6ff)' : ''; }}
+            >
+              {placeholder}
+            </div>
+
+            {/* Không tìm thấy */}
+            {filtered.length === 0 && (
+              <div style={{ padding: '12px', fontSize: 13, color: 'var(--text-3)', textAlign: 'center' }}>
+                Không tìm thấy kết quả
+              </div>
+            )}
+
+            {/* Danh sách user */}
+            {filtered.map(u => (
+              <div
+                key={u.id}
+                onClick={() => { onChange(u.id); setOpen(false); }}
+                style={{
+                  padding: '7px 12px', fontSize: 13, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  background: value === u.id ? 'var(--primary-50, #eff6ff)' : '',
+                  color: value === u.id ? 'var(--primary)' : 'var(--text-1)',
+                  transition: 'background 0.12s',
+                }}
+                onMouseEnter={e => { if (value !== u.id) e.currentTarget.style.background = 'var(--bg-hover, #f5f5f5)'; }}
+                onMouseLeave={e => { if (value !== u.id) e.currentTarget.style.background = ''; }}
+              >
+                {/* Chấm đỏ nhỏ = chưa kích hoạt */}
+                {!u.isActive && (
+                  <span
+                    title="Chưa kích hoạt"
+                    style={{
+                      width: 6, height: 6, borderRadius: '50%',
+                      background: 'var(--danger, #ef4444)', flexShrink: 0,
+                    }}
+                  />
+                )}
+
+                {/* Tên + chức vụ */}
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ fontWeight: value === u.id ? 600 : 400 }}>{u.fullName}</span>
+                  {u.position && (
+                    <span style={{ fontSize: 11, color: 'var(--text-3)', marginLeft: 5 }}>
+                      {u.position}
+                    </span>
+                  )}
+                </span>
+
+                {/* Badge vai trò */}
+                <span style={{
+                  fontSize: 10, padding: '1px 6px', borderRadius: 10,
+                  background: 'var(--bg-muted, #f1f5f9)', color: 'var(--text-3)',
+                  fontWeight: 500, flexShrink: 0,
+                }}>
+                  {getRoleLabel(u.role)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
-  const [deptFilter, setDeptFilter] = useState('');   // ← MỚI: ID phòng ban
+  const [deptFilter, setDeptFilter] = useState('');
   const [modal, setModal] = useState(null);
   const [selected, setSelected] = useState(null);
   const [form, setForm] = useState({
@@ -241,6 +419,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     getDepartments().then(r => setDepts(r.data.data)).catch(() => {});
+    // Lấy cả tài khoản chưa kích hoạt (backend đã bỏ isActive: true)
     getManagers().then(r => setManagers(r.data.data)).catch(() => {});
   }, []);
 
@@ -261,7 +440,7 @@ export default function UsersPage() {
     setForm(f => ({ ...f, department: deptName, directorId }));
   };
 
-  // ── Load users — truyền thêm departmentId ────────────────────────────────
+  // ── Load users ───────────────────────────────────────────────────────────────
   const load = useCallback(async (page = 1) => {
     setLoading(true);
     try {
@@ -269,13 +448,13 @@ export default function UsersPage() {
         page, limit: 15,
         search,
         role: roleFilter,
-        departmentId: deptFilter,   // ← MỚI
+        departmentId: deptFilter,
       });
       setUsers(res.data.data);
       setPagination(res.data.pagination);
     } catch { toast.error('Không tải được danh sách user'); }
     finally { setLoading(false); }
-  }, [search, roleFilter, deptFilter]);   // ← thêm deptFilter vào deps
+  }, [search, roleFilter, deptFilter]);
 
   useEffect(() => { load(1); }, [load]);
 
@@ -335,24 +514,21 @@ export default function UsersPage() {
     catch (err) { toast.error(err.response?.data?.message || 'Lỗi gửi email'); }
   };
 
+  // managerList: tất cả role manager/employee/director/admin (kể cả chưa kích hoạt)
   const managerList = managers.filter(m => ['manager', 'employee', 'director', 'admin'].includes(m.role));
+  // directorList: chỉ manager/director (kể cả chưa kích hoạt)
   const directorList = managers.filter(m => ['manager', 'director'].includes(m.role));
 
+  // ── Form fields dùng SearchableUserSelect ───────────────────────────────────
   const ManagerSelect = () => (
     <div className="form-group">
       <label className="form-label">Quản lý trực tiếp</label>
-      <select
-        className="form-select"
+      <SearchableUserSelect
         value={form.directManagerId}
-        onChange={e => setForm(f => ({ ...f, directManagerId: e.target.value }))}
-      >
-        <option value="">— Không có —</option>
-        {managerList.map(m => (
-          <option key={m.id} value={m.id}>
-            {m.fullName} ({m.position || getRoleLabel(m.role)})
-          </option>
-        ))}
-      </select>
+        onChange={v => setForm(f => ({ ...f, directManagerId: v }))}
+        options={managerList}
+        placeholder="— Không có —"
+      />
     </div>
   );
 
@@ -366,19 +542,12 @@ export default function UsersPage() {
           </span>
         )}
       </label>
-      <select
-        className="form-select"
+      <SearchableUserSelect
         value={form.directorId}
-        onChange={e => setForm(f => ({ ...f, directorId: e.target.value }))}
-        style={form.directorId ? { borderColor: 'var(--success)', background: '#f0fdf4' } : {}}
-      >
-        <option value="">— Chưa xác định —</option>
-        {directorList.map(d => (
-          <option key={d.id} value={d.id}>
-            {d.fullName} ({d.position || getRoleLabel(d.role)})
-          </option>
-        ))}
-      </select>
+        onChange={v => setForm(f => ({ ...f, directorId: v }))}
+        options={directorList}
+        placeholder="— Chưa xác định —"
+      />
       {!form.directorId && form.department && (
         <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 4 }}>
           ⚠ Phòng ban này chưa có ban lãnh đạo — hãy cài đặt trong mục Phòng ban
@@ -387,7 +556,6 @@ export default function UsersPage() {
     </div>
   );
 
-  // Số filter đang active (để hiển thị badge)
   const activeFilterCount = [roleFilter, deptFilter].filter(Boolean).length;
 
   return (
@@ -435,14 +603,14 @@ export default function UsersPage() {
                 {ROLES.map(r => <option key={r} value={r}>{getRoleLabel(r)}</option>)}
               </select>
 
-              {/* ── MỚI: Lọc phòng ban dạng cây ── */}
+              {/* Lọc phòng ban dạng cây */}
               <DeptTreeFilter
                 value={deptFilter}
                 onChange={setDeptFilter}
                 depts={depts}
               />
 
-              {/* Nút xóa filter nếu có */}
+              {/* Xóa filter */}
               {activeFilterCount > 0 && (
                 <button
                   className="btn btn-ghost btn-sm"
@@ -530,7 +698,7 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* Create Modal */}
+      {/* ── Create Modal ── */}
       <Modal
         open={modal === 'create'}
         onClose={() => setModal(null)}
@@ -578,7 +746,7 @@ export default function UsersPage() {
         </div>
       </Modal>
 
-      {/* Edit Modal */}
+      {/* ── Edit Modal ── */}
       <Modal
         open={modal === 'edit'}
         onClose={() => setModal(null)}
