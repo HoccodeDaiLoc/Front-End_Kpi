@@ -308,25 +308,29 @@ code, .mono { font-family: 'JetBrains Mono', monospace; }
 
 /* Pagination */
 .pagination { display: flex; align-items: center; gap: 4px; justify-content: center; margin-top: 20px; }
+
 .page-btn {
   width: 34px; height: 34px; border: 1px solid var(--border); background: var(--surface);
   border-radius: 6px; display: flex; align-items: center; justify-content: center;
   cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-2); transition: all .2s;
 }
+
 .page-btn:hover { border-color: var(--primary); color: var(--primary); }
 .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 .page-btn:disabled { opacity: .4; cursor: not-allowed; }
 
-/* Nav badge */
+
 .nav-badge {
   margin-left: auto; background: var(--danger); color: white;
   font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 99px;
 }
 
+
 @media (max-width: 768px) {
   .app-layout {
     margin-left: 0 !important;
   }
+
 
   .main-content {
     margin-left: 0 !important;
@@ -334,15 +338,18 @@ code, .mono { font-family: 'JetBrains Mono', monospace; }
     padding-bottom: 70px; /* ← đẩy content lên trên bottom nav */
   }
 
+
   .page-content {
     padding: 16px 12px !important;
   }
+
 
   .grid-4, .grid-3 { grid-template-columns: 1fr 1fr; }
   .grid-2 { grid-template-columns: 1fr; }
   .form-row, .form-row-3 { grid-template-columns: 1fr; }
   
 }
+
 
 @media (max-width: 480px) {
   .page-content {

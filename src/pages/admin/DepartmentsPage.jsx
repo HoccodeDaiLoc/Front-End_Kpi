@@ -95,7 +95,7 @@ function TreeNode({ node, level = 0, onEdit, onDelete, onAddChild, onEditHead })
           </button>
           <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title="Xóa" onClick={() => onDelete(node)}>
             <Trash2 size={13} />
-          </button>
+          </button>   
         </div>
       </div>
 

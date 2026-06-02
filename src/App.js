@@ -6,10 +6,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import AppLayout from './components/layout/AppLayout';
 import Spinner from './components/common/Spinner';
-
 import ExamAssignmentPage from './pages/admin/ExamAssignmentPage';
 import ExamSubmissionPage from './pages/admin/ExamSubmissionPage';
-// Auth
 import LoginPage from './pages/auth/LoginPage';
 import ActivatePage from './pages/auth/ActivatePage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
@@ -18,7 +16,6 @@ import ExamsPage from './pages/admin/ExamsPage';
 import MyExamsPage from './pages/shared/MyExamsPage';
 import TakeExamPage from './pages/shared/TakeExamPage';
 import ExamResultPage from './pages/shared/ExamResultPage';
-// Shared
 import DashboardPage from './pages/shared/DashboardPage';
 import EvaluationsPage from './pages/shared/EvaluationsPage';
 import EvaluationDetailPage from './pages/shared/EvaluationDetailPage';
